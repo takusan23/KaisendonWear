@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">かいせんどんWear</string>
+    <!--
+    This string is used for square devices and overridden by hello_world in
+    values-round/strings.xml for round devices.
+    -->
+    <string name="hello_world">Hello Square World!</string>
+    <string name="title_activity_account_transport">アカウント転送アクティビティ</string>
+    <string name="transport_account_message">かいせんどんアプリを開いてメニュー→Wearを選んで、「アカウント情報転送」を押してください。この画面のままにしておいてください。転送が完了したら自動的に画面が切り替わります。</string>
+    <string name="transport_instance_ok">インスタンス転送完了</string>
+    <string name="transport_accesstoken_ok">アクセストークン情報転送完了</string>
+</resources>

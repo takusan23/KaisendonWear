@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">KaisendonWear</string>
+    <!--
+    This string is used for square devices and overridden by hello_world in
+    values-round/strings.xml for round devices.
+    -->
+    <string name="hello_world">Hello Square World!</string>
+    <string name="title_activity_account_transport">AccountTransportActivity</string>
+    <string name="transport_account_message">Open the Kaisendon application, choose Menu -> Wear, and press \"Transfer account information\". Please leave this screen. When transfer is completed, the screen automatically switches.</string>
+    <string name="transport_instance_ok">Instance transfer complete.</string>
+    <string name="transport_accesstoken_ok">Access token transfer complete.</string>
+</resources>
