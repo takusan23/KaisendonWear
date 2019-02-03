@@ -83,9 +83,4 @@ public class AccountTransportActivity extends WearableActivity implements
 
     }
 
-    //メイン画面切り替えよう
-    private void mainActivityChange() {
-        if (pref_setting.getString("main_token", "").length() == 0 && pref_setting.getString("main_instance", "").length() == 0) {
-        }
-    }
 }
