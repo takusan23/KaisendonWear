@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.wear.activity.ConfirmationActivity;
 import android.support.wear.ambient.AmbientModeSupport;
 import android.support.wear.widget.drawer.WearableNavigationDrawerView;
 import android.support.wearable.activity.WearableActivity;
@@ -76,9 +77,15 @@ public class AccountTransportActivity extends WearableActivity implements
         if (messageEvent.getPath().equals("/finish")) {
             //アカウント情報受け取ったら画面を切り替える
             // とーすと
-            Toast.makeText(AccountTransportActivity.this, R.string.transport_instance_ok, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(AccountTransportActivity.this, R.string.transport_instance_ok, Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(AccountTransportActivity.this, MainActivity.class);
+            //反応をわかりやすく
+            Intent animation = new Intent(AccountTransportActivity.this, ConfirmationActivity.class);
+            animation.putExtra(ConfirmationActivity.EXTRA_ANIMATION_TYPE, ConfirmationActivity.SUCCESS_ANIMATION);
+            animation.putExtra(ConfirmationActivity.EXTRA_MESSAGE, R.string.transport_instance_ok);
+
             startActivity(intent);
+            //startActivity(animation);
         }
 
     }

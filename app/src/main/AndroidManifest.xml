@@ -3,7 +3,7 @@
     package="io.github.takusan23.kaisendon">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.type.watch" />
 
     <application
@@ -36,6 +36,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
+
     </application>
 
 </manifest>
