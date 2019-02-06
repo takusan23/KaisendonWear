@@ -1,11 +1,17 @@
 package io.github.takusan23.kaisendon;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.wear.ambient.AmbientModeSupport;
+import android.support.wear.widget.drawer.WearableActionDrawerView;
+import android.support.wear.widget.drawer.WearableNavigationDrawerView;
 import android.support.wearable.activity.WearableActivity;
 import android.text.Html;
+import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -22,11 +28,18 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
-public class MainActivity extends WearableActivity {
+public class MainActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener,AmbientModeSupport.AmbientCallbackProvider {
 
     private SharedPreferences pref_setting;
     private ListView listView;
     private String timelineURL = "timelines/public?local=true&limit=40";
+
+    private String accessToken = "";
+
+    //メニュー
+    private WearableActionDrawerView mWearableActionDrawer;
+    private WearableNavigationDrawerView mWearableNavigationDrawer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +54,34 @@ public class MainActivity extends WearableActivity {
             startActivity(intent);
         }
 
+        //アクセストークン
+        accessToken = pref_setting.getString("main_token","");
+
+
         //TL取得
         listView = findViewById(R.id.listView);
         loadTL();
+
+        //NavigationDrawer
+        mWearableNavigationDrawer = findViewById(R.id.top_navigation_drawer);
+        mWearableNavigationDrawer.setAdapter(new NavigationAdapter(this));
+        // Peeks navigation drawer on the top.
+        mWearableNavigationDrawer.getController().peekDrawer();
+        mWearableNavigationDrawer.addOnItemSelectedListener(new WearableNavigationDrawerView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(int i) {
+                //コンテンツを切り替えたときはここ
+                loadTL();
+            }
+        });
+
+        // Bottom Action Drawer
+        mWearableActionDrawer =
+                (WearableActionDrawerView) findViewById(R.id.bottom_action_drawer);
+        // Peeks action drawer on the bottom.
+        mWearableActionDrawer.getController().peekDrawer();
+        mWearableActionDrawer.setOnMenuItemClickListener(this);
+
 
         // Enables Always-on
         setAmbientEnabled();
@@ -119,4 +157,125 @@ public class MainActivity extends WearableActivity {
             }
         });
     }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        final int itemId = item.getItemId();
+        //選択
+        switch (itemId) {
+            case R.id.menu_reload:
+                loadTL();
+                break;
+            case R.id.menu_toot:
+/*
+                Intent intent = new Intent(MainActivity.this, TootActivity.class);
+                startActivity(intent);
+*/
+                break;
+        }
+        mWearableActionDrawer.getController().peekDrawer();
+        return false;
+    }
+
+
+    //メニューにあるアイコン、タイトルの設定
+    private final class NavigationAdapter
+            extends WearableNavigationDrawerView.WearableNavigationDrawerAdapter {
+
+        private final Context mContext;
+
+        public NavigationAdapter(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        public int getCount() {
+            //メニューの数？
+            return 4;
+        }
+
+        @Override
+        public String getItemText(int pos) {
+            //なんかサンプルからかけ離れた実装方法だけどこれでいいわ
+            String title = "ホーム";
+            switch (pos) {
+                case 0:
+                    title = "ホーム";
+                    break;
+                case 1:
+                    title = "通知";
+                    break;
+                case 2:
+                    title = "ローカルTL";
+                    break;
+                case 3:
+                    title = "連合TL";
+                    break;
+                case 4:
+                    title = "設定";
+                    break;
+            }
+            return title;
+        }
+
+        @Override
+        public Drawable getItemDrawable(int pos) {
+            //アイコンとか
+            //これもサンプルからかけ離れた実装だから
+            Drawable drawable = getDrawable(R.drawable.ic_send_black_24dp);
+            switch (pos) {
+                case 0:
+                    drawable = getDrawable(R.drawable.ic_home_black_24dp);
+                    timelineURL = "timelines/home?limit=40&access_token=" + accessToken;
+                    break;
+                case 1:
+                    drawable = getDrawable(R.drawable.ic_notifications_black_24dp);
+                    break;
+                case 2:
+                    drawable = getDrawable(R.drawable.ic_train_black_24dp);
+                    timelineURL = "timelines/public?limit=40&access_token=" + accessToken + "&local=true";
+                    break;
+                case 3:
+                    drawable = getDrawable(R.drawable.ic_flight_black_24dp);
+                    timelineURL = "timelines/public?limit=40&access_token=" + accessToken + "&local=true";
+                    break;
+                case 4:
+                    drawable = getDrawable(R.drawable.ic_settings_black_24dp);
+                    break;
+            }
+
+            return drawable;
+        }
+    }
+
+    @Override
+    public AmbientModeSupport.AmbientCallback getAmbientCallback() {
+        return new MyAmbientCallback();
+    }
+
+    private class MyAmbientCallback extends AmbientModeSupport.AmbientCallback {
+        /**
+         * Prepares the UI for ambient mode.
+         */
+        @Override
+        public void onEnterAmbient(Bundle ambientDetails) {
+            super.onEnterAmbient(ambientDetails);
+
+            //mPlanetFragment.onEnterAmbientInFragment(ambientDetails);
+            mWearableNavigationDrawer.getController().closeDrawer();
+            mWearableActionDrawer.getController().closeDrawer();
+        }
+
+        /**
+         * Restores the UI to active (non-ambient) mode.
+         */
+        @Override
+        public void onExitAmbient() {
+            super.onExitAmbient();
+            //mPlanetFragment.onExitAmbientInFragment();
+            mWearableActionDrawer.getController().peekDrawer();
+        }
+    }
+
+
 }
