@@ -11,14 +11,20 @@ import android.support.wear.widget.drawer.WearableActionDrawerView;
 import android.support.wear.widget.drawer.WearableNavigationDrawerView;
 import android.support.wearable.activity.WearableActivity;
 import android.text.Html;
+import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.Request;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,18 +34,24 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
-public class MainActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener,AmbientModeSupport.AmbientCallbackProvider {
+public class MainActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener, AmbientModeSupport.AmbientCallbackProvider {
 
     private SharedPreferences pref_setting;
     private ListView listView;
-    private String timelineURL = "timelines/public?local=true&limit=40";
+    private String timelineURL = "";
 
+    //あかうんと
     private String accessToken = "";
+    private String instance = "";
+
+    //名前
+    private String name = "";
 
     //メニュー
     private WearableActionDrawerView mWearableActionDrawer;
     private WearableNavigationDrawerView mWearableNavigationDrawer;
-
+    private FrameLayout frameLayout;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +67,19 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         }
 
         //アクセストークン
-        accessToken = pref_setting.getString("main_token","");
+        accessToken = pref_setting.getString("main_token", "");
+        instance = pref_setting.getString("main_instance", "");
+        timelineURL = "timelines/home?limit=40&access_token=" + accessToken;
 
+        //アカウント情報取得
+        MyAccount();
+
+        //FrameLayout
+        frameLayout = findViewById(R.id.mainFrameLayout);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER;
+        progressBar = new ProgressBar(this);
+        progressBar.setLayoutParams(layoutParams);
 
         //TL取得
         listView = findViewById(R.id.listView);
@@ -71,6 +94,20 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
             @Override
             public void onItemSelected(int i) {
                 //コンテンツを切り替えたときはここ
+                switch (i) {
+                    case 0:
+                        timelineURL = "timelines/home?limit=40&access_token=" + accessToken;
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        timelineURL = "timelines/public?limit=40&access_token=" + accessToken + "&local=true";
+                        break;
+                    case 3:
+                        timelineURL = "timelines/public?limit=40&access_token=" + accessToken;
+                        break;
+                }
+
                 loadTL();
             }
         });
@@ -88,12 +125,16 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
     }
 
 
+    //タイムラインの読み込み
     private void loadTL() {
         ArrayList<TimelineMenuItem> toot_list = new ArrayList<>();
         final TimelineAdapter adapter = new TimelineAdapter(this, R.layout.timeline_layout, toot_list);
         adapter.clear();
+        //くるくる（語彙力）をだす
+        frameLayout.removeAllViews();
+        frameLayout.addView(progressBar);
 
-        String url = "https://friends.nico/api/v1/" + timelineURL;
+        String url = "https://" + instance + "/api/v1/" + timelineURL;
         //作成
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(url)
@@ -145,18 +186,47 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                     });
                                 }
                             });
-
-
                         }
                     }
-
+                    frameLayout.removeAllViews();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
             }
         });
     }
+
+    //ID DisplayName
+    private void MyAccount() {
+        String url = "https://" + instance + "/api/v1/accounts/verify_credentials/?access_token=" + accessToken;
+        //作成
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        //GETリクエスト
+        OkHttpClient client_1 = new OkHttpClient();
+        client_1.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String response_string = response.body().string();
+                try {
+                    JSONObject jsonObject = new JSONObject(response_string);
+                    name = jsonObject.getString("display_name") + " @" + jsonObject.getString("acct");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
@@ -167,10 +237,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                 loadTL();
                 break;
             case R.id.menu_toot:
-/*
                 Intent intent = new Intent(MainActivity.this, TootActivity.class);
                 startActivity(intent);
-*/
                 break;
         }
         mWearableActionDrawer.getController().peekDrawer();
@@ -206,41 +274,32 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                     title = "通知";
                     break;
                 case 2:
-                    title = "ローカルTL";
+                    title = "ローカルタイムライン";
                     break;
                 case 3:
-                    title = "連合TL";
-                    break;
-                case 4:
-                    title = "設定";
+                    title = "連合タイムライン";
                     break;
             }
-            return title;
+            return title + "\n" + name;
         }
 
         @Override
         public Drawable getItemDrawable(int pos) {
             //アイコンとか
             //これもサンプルからかけ離れた実装だから
-            Drawable drawable = getDrawable(R.drawable.ic_send_black_24dp);
+            Drawable drawable = getDrawable(R.drawable.ic_home_black_24dp);
             switch (pos) {
                 case 0:
                     drawable = getDrawable(R.drawable.ic_home_black_24dp);
-                    timelineURL = "timelines/home?limit=40&access_token=" + accessToken;
                     break;
                 case 1:
                     drawable = getDrawable(R.drawable.ic_notifications_black_24dp);
                     break;
                 case 2:
                     drawable = getDrawable(R.drawable.ic_train_black_24dp);
-                    timelineURL = "timelines/public?limit=40&access_token=" + accessToken + "&local=true";
                     break;
                 case 3:
                     drawable = getDrawable(R.drawable.ic_flight_black_24dp);
-                    timelineURL = "timelines/public?limit=40&access_token=" + accessToken + "&local=true";
-                    break;
-                case 4:
-                    drawable = getDrawable(R.drawable.ic_settings_black_24dp);
                     break;
             }
 

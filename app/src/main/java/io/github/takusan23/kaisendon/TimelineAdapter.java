@@ -68,7 +68,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         String userID = timelineItem.get(5);
 
         //本文
-        holder.tootTextView.setText(display_name + "/@" + acct + "\n" + tootText);
+        holder.tootTextView.setText(display_name + " @" + acct + "\n" + tootText);
 
         //画像
         Glide.with(getContext())

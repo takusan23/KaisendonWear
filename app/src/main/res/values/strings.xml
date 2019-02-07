@@ -9,4 +9,8 @@
     <string name="transport_account_message">Open the Kaisendon application, choose Menu -> Wear, and press \"Transfer account information\". Please leave this screen. When transfer is completed, the screen automatically switches.</string>
     <string name="transport_instance_ok">Instance transfer complete.</string>
     <string name="transport_accesstoken_ok">Access token transfer complete.</string>
+    <string name="title_activity_toot">TootActivity</string>
+    <string name="imananishiteru">What are you doing now?</string>
+    <string name="toot_ok">Toot complete!</string>
+    <string name="toot">Toot!</string>
 </resources>

@@ -10,4 +10,8 @@
     <string name="transport_account_message">かいせんどんアプリを開いてメニュー→Wearを選んで、「アカウント情報転送」を押してください。この画面のままにしておいてください。転送が完了したら自動的に画面が切り替わります。</string>
     <string name="transport_instance_ok">インスタンス転送完了</string>
     <string name="transport_accesstoken_ok">アクセストークン情報転送完了</string>
+    <string name="title_activity_toot">トゥートアクティビティ</string>
+    <string name="imananishiteru">今なにしてる？</string>
+    <string name="toot_ok">トゥート完了！</string>
+    <string name="toot">トゥート！</string>
 </resources>

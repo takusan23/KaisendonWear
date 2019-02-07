@@ -3,8 +3,10 @@
     package="io.github.takusan23.kaisendon">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.INTERNET" />
+
     <uses-feature android:name="android.hardware.type.watch" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -24,9 +26,22 @@
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
 
+        <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
+
+
+        <activity
+            android:name=".TootActivity"
+            android:icon="@drawable/ic_create_black_24dp"
+            android:label="@string/toot">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".AccountTransportActivity"
-            android:label="@string/title_activity_account_transport"></activity>
+            android:label="@string/title_activity_account_transport" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
@@ -36,9 +51,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
-
     </application>
 
 </manifest>

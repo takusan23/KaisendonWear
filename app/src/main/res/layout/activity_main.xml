@@ -14,7 +14,7 @@
         android:id="@+id/top_navigation_drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/grey"
+        android:background="#80757575"
         app:navigationStyle="multiPage" >
 
     </android.support.wear.widget.drawer.WearableNavigationDrawerView>
@@ -23,7 +23,7 @@
         android:id="@+id/bottom_action_drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/grey"
+        android:background="#80757575"
         app:actionMenu="@menu/action_drawer_menu" >
 
     </android.support.wear.widget.drawer.WearableActionDrawerView>
@@ -35,11 +35,9 @@
 
 
     <FrameLayout
+        android:id="@+id/mainFrameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="@dimen/inner_frame_layout_padding"
-        app:boxedEdges="all">
-
-
-    </FrameLayout>
+        app:boxedEdges="all" />
 </android.support.wear.widget.drawer.WearableDrawerLayout>

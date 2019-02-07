@@ -80,9 +80,9 @@ public class AccountTransportActivity extends WearableActivity implements
             //Toast.makeText(AccountTransportActivity.this, R.string.transport_instance_ok, Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(AccountTransportActivity.this, MainActivity.class);
             //反応をわかりやすく
-            Intent animation = new Intent(AccountTransportActivity.this, ConfirmationActivity.class);
-            animation.putExtra(ConfirmationActivity.EXTRA_ANIMATION_TYPE, ConfirmationActivity.SUCCESS_ANIMATION);
-            animation.putExtra(ConfirmationActivity.EXTRA_MESSAGE, R.string.transport_instance_ok);
+            Intent animation = new Intent(AccountTransportActivity.this, android.support.wearable.activity.ConfirmationActivity.class);
+            animation.putExtra(android.support.wearable.activity.ConfirmationActivity.EXTRA_ANIMATION_TYPE, android.support.wearable.activity.ConfirmationActivity.SUCCESS_ANIMATION);
+            animation.putExtra(android.support.wearable.activity.ConfirmationActivity.EXTRA_MESSAGE, getString(R.string.transport_instance_ok));
 
             startActivity(intent);
             //startActivity(animation);
