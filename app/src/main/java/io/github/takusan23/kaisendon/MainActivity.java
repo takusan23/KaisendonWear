@@ -99,6 +99,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                         timelineURL = "timelines/home?limit=40&access_token=" + accessToken;
                         break;
                     case 1:
+                        timelineURL = "notifications/?limit=40&access_token=" + accessToken;
                         break;
                     case 2:
                         timelineURL = "timelines/public?limit=40&access_token=" + accessToken + "&local=true";
@@ -168,22 +169,23 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                 public void run() {
                                     //追加
                                     //配列用意
-                                    ArrayList<String> arrayList = new ArrayList<>();
-                                    arrayList.add("");
-                                    arrayList.add(toot_id);
-                                    arrayList.add(toot);
-                                    arrayList.add(display);
-                                    arrayList.add(acct);
-                                    arrayList.add(avatar);
-                                    final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            adapter.add(timelineMenuItem);
-                                            adapter.notifyDataSetChanged();
-                                            listView.setAdapter(adapter);
-                                        }
-                                    });
+                                    //通知と分ける
+                                        ArrayList<String> arrayList = new ArrayList<>();
+                                        arrayList.add("");
+                                        arrayList.add(toot_id);
+                                        arrayList.add(toot);
+                                        arrayList.add(display);
+                                        arrayList.add(acct);
+                                        arrayList.add(avatar);
+                                        final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                adapter.add(timelineMenuItem);
+                                                adapter.notifyDataSetChanged();
+                                                listView.setAdapter(adapter);
+                                            }
+                                        });
                                 }
                             });
                         }
