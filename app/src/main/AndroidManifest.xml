@@ -26,9 +26,10 @@
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
 
+        <activity
+            android:name=".TootInfoActivity"
+            android:label="@string/title_activity_toot_info"></activity>
         <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
-
-
         <activity
             android:name=".TootActivity"
             android:icon="@drawable/ic_create_black_24dp"

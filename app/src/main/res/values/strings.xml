@@ -13,4 +13,9 @@
     <string name="imananishiteru">What are you doing now?</string>
     <string name="toot_ok">Toot complete!</string>
     <string name="toot">Toot!</string>
+    <string name="mention">Mention</string>
+    <string name="favourite">Favourited</string>
+    <string name="reblog">Boosted</string>
+    <string name="follow">Followed</string>
+    <string name="title_activity_toot_info">TootInfoActivity</string>
 </resources>

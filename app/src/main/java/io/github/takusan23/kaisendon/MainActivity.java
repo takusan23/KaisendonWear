@@ -161,36 +161,88 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             final String display = jsonArray.getJSONObject(i).getJSONObject("account").getString("display_name");
                             final String acct = jsonArray.getJSONObject(i).getJSONObject("account").getString("acct");
                             final String avatar = jsonArray.getJSONObject(i).getJSONObject("account").getString("avatar");
-                            final String toot = Html.fromHtml(jsonArray.getJSONObject(i).getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
-                            final String toot_id = jsonArray.getJSONObject(i).getString("id");
+                            String toot_id = jsonArray.getJSONObject(i).getString("id");
+                            final String accountID = jsonArray.getJSONObject(i).getJSONObject("account").getString("id");
+
+                            String reblogToot = null;
+                            String reblogDisplayName = null;
+                            String reblogName = null;
+                            String reblogAvatar = null;
+                            String reblogAccountID = null;
+                            String reblogTootID = null;
+
+                            //reblogとか
+                            String type = "";
+                            if (!jsonArray.getJSONObject(i).isNull("reblog")) {
+                                type = "reblog";
+                                JSONObject reblogJsonObject = jsonArray.getJSONObject(i).getJSONObject("reblog");
+                                JSONObject reblogAccountJsonObject = reblogJsonObject.getJSONObject("account");
+                                reblogToot = Html.fromHtml(reblogJsonObject.getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
+                                reblogDisplayName = reblogAccountJsonObject.getString("display_name");
+                                reblogName = reblogAccountJsonObject.getString("acct");
+                                reblogAvatar = reblogAccountJsonObject.getString("avatar");
+                                reblogAccountID = reblogAccountJsonObject.getString("id");
+                                reblogTootID = reblogJsonObject.getString("id");
+                            }
+
+
+                            //通知とか
+                            String toot = "";
+                            String memo = null;
+                            if (jsonArray.getJSONObject(i).has("content")) {
+                                toot = Html.fromHtml(jsonArray.getJSONObject(i).getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
+                            } else {
+                                memo = "notification";
+                                type = jsonArray.getJSONObject(i).getString("type");
+                                toot_id = jsonArray.getJSONObject(i).getJSONObject("status").getString("id");
+                                toot = Html.fromHtml(jsonArray.getJSONObject(i).getJSONObject("status").getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
+                            }
                             //TextView
+                            final String finalToot = toot;
+                            final String finalType = type;
+                            final String finalReblogToot = reblogToot;
+                            final String finalReblogDisplayName = reblogDisplayName;
+                            final String finalReblogName = reblogName;
+                            final String finalReblogAvatar = reblogAvatar;
+                            final String finalReblogAccountID = reblogAccountID;
+                            final String finalReblogTootID = reblogTootID;
+                            final String finalToot_id = toot_id;
+                            final String finalMemo = memo;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     //追加
                                     //配列用意
                                     //通知と分ける
-                                        ArrayList<String> arrayList = new ArrayList<>();
-                                        arrayList.add("");
-                                        arrayList.add(toot_id);
-                                        arrayList.add(toot);
-                                        arrayList.add(display);
-                                        arrayList.add(acct);
-                                        arrayList.add(avatar);
-                                        final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                adapter.add(timelineMenuItem);
-                                                adapter.notifyDataSetChanged();
-                                                listView.setAdapter(adapter);
-                                            }
-                                        });
+                                    ArrayList<String> arrayList = new ArrayList<>();
+                                    arrayList.add(finalMemo);
+                                    arrayList.add(finalType);
+                                    arrayList.add(finalToot_id);
+                                    arrayList.add(finalToot);
+                                    arrayList.add(display);
+                                    arrayList.add(acct);
+                                    arrayList.add(avatar);
+                                    arrayList.add(accountID);
+                                    arrayList.add(finalReblogToot);
+                                    arrayList.add(finalReblogDisplayName);
+                                    arrayList.add(finalReblogName);
+                                    arrayList.add(finalReblogAvatar);
+                                    arrayList.add(finalReblogAccountID);
+                                    arrayList.add(finalReblogTootID);
+                                    final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            adapter.add(timelineMenuItem);
+                                            adapter.notifyDataSetChanged();
+                                            listView.setAdapter(adapter);
+                                        }
+                                    });
+                                    frameLayout.removeAllViews();
                                 }
                             });
                         }
                     }
-                    frameLayout.removeAllViews();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -313,6 +365,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
         return new MyAmbientCallback();
     }
+
 
     private class MyAmbientCallback extends AmbientModeSupport.AmbientCallback {
         /**

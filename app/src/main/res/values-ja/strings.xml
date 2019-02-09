@@ -14,4 +14,8 @@
     <string name="imananishiteru">今なにしてる？</string>
     <string name="toot_ok">トゥート完了！</string>
     <string name="toot">トゥート！</string>
+    <string name="mention">返信</string>
+    <string name="favourite">お気に入り</string>
+    <string name="reblog">ブースト</string>
+    <string name="follow">フォロー</string>
 </resources>
