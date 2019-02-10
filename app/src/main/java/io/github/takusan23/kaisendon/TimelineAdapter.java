@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -21,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
+import com.sys1yagi.mastodon4j.MastodonClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,7 +67,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
-        ViewHolder holder;
+        final ViewHolder holder;
         //設定読み込み
         pref_setting = PreferenceManager.getDefaultSharedPreferences(getContext());
         //アクセストークン
@@ -108,6 +112,27 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         String reblogAvatar = timelineItem.get(11);
         String reblogAccountID = timelineItem.get(12);
         final String reblogTootID = timelineItem.get(13);
+        //fav/reblog
+        String favourited_string = timelineItem.get(14);
+        String reblogged_string = timelineItem.get(15);
+        boolean favourited = false;
+        boolean reblogged = false;
+        if (Boolean.valueOf(favourited_string)) {
+            favourited = true;
+/*
+            Drawable favIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_star_border_black_24dp_2, null);
+            favIcon.setTint(Color.parseColor("#ffd700"));
+            holder.favImageButton.setImageDrawable(favIcon);
+*/
+        }
+        if (Boolean.valueOf(reblogged_string)) {
+            reblogged = true;
+/*
+            Drawable boostIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_repeat_black_24dp_2, null);
+            boostIcon.setTint(Color.parseColor("#008000"));
+            holder.favImageButton.setImageDrawable(boostIcon);
+*/
+        }
 
         String notificationType = "";
         if (!memo.isEmpty() && timelineItem.get(10) == null) {
@@ -177,18 +202,28 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         }
 
         //Favouriteする
+        final boolean finalFavourited = favourited;
         holder.favImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(), memo, Toast.LENGTH_SHORT).show();
-                //tootPOST("/favourite", tootID);
+                //fav済み？
+                if (finalFavourited) {
+                    TootAction(tootID, "unfavourite", holder.favImageButton);
+                } else {
+                    TootAction(tootID, "favourite", holder.favImageButton);
+                }
             }
         });
         //Boostする
+        final boolean finalReblogged = reblogged;
         holder.boostImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //tootPOST("/reblog", tootID);
+                if (finalReblogged) {
+                    TootAction(tootID, "unreblog", holder.boostImageButton);
+                } else {
+                    TootAction(tootID, "reblog", holder.boostImageButton);
+                }
             }
         });
 
@@ -217,36 +252,44 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
     }
 
     //Favourite、ReblogをPOSTするためのメゾット
-    private void tootPOST(String endPoint, final String id) {
-        String url = "https://" + instance + "/api/v1/statuses/" + id + endPoint + "&access_token=" + accessToken;
-        //ぱらめーたー
-        RequestBody requestBody = new FormBody.Builder()
-                .build();
-        //作成
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build();
-
-        //GETリクエスト
-        OkHttpClient client_1 = new OkHttpClient();
-        client_1.newCall(request).enqueue(new Callback() {
-
+    public void TootAction(final String id, final String endPoint, final ImageButton imageButton) {
+        new AsyncTask<String, Void, String>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-
+            protected String doInBackground(String... params) {
+                MastodonClient client = new MastodonClient.Builder(instance, new OkHttpClient.Builder(), new Gson()).accessToken(accessToken).build();
+                RequestBody requestBody = new FormBody.Builder()
+                        .build();
+                client.post("statuses/" + id + "/" + endPoint, requestBody);
+                return id;
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String response_string = response.body().string();
-
-                System.out.println("POSTしたよ" + response_string);
+            protected void onPostExecute(String result) {
+/*
+                if (endPoint.contains("reblog")) {
+                    Drawable boostIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_repeat_black_24dp_2, null);
+                    boostIcon.setTint(Color.parseColor("#008000"));
+                    imageButton.setImageDrawable(boostIcon);
+                }
+                if (endPoint.contains("favourite")) {
+                    Drawable favIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_star_border_black_24dp_2, null);
+                    favIcon.setTint(Color.parseColor("#ffd700"));
+                    imageButton.setImageDrawable(favIcon);
+                }
+                if (endPoint.contains("unfavourite")) {
+                    Drawable favIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_star_border_black_24dp_2, null);
+                    favIcon.setTint(Color.parseColor("#000000"));
+                    imageButton.setImageDrawable(favIcon);
+                }
+                if (endPoint.contains("unreblog")) {
+                    Drawable boostIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_repeat_black_24dp_2, null);
+                    boostIcon.setTint(Color.parseColor("#000000"));
+                    imageButton.setImageDrawable(boostIcon);
+                }
+*/
             }
-        });
-
+        }.execute();
     }
-
 
     private class ViewHolder {
         TextView nameTextView;

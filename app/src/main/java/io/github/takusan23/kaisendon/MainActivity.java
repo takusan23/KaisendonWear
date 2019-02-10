@@ -14,10 +14,12 @@ import android.text.Html;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.Request;
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
@@ -39,6 +42,11 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
     private SharedPreferences pref_setting;
     private ListView listView;
     private String timelineURL = "";
+    ArrayList<TimelineMenuItem> toot_list;
+    TimelineAdapter adapter;
+    //スクロール位置保持
+    int position;
+    int y;
 
     //あかうんと
     private String accessToken = "";
@@ -53,6 +61,10 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
     private FrameLayout frameLayout;
     private ProgressBar progressBar;
 
+    //追加読み込み
+    private String lastID;
+    private boolean listViewLast = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +76,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         if (pref_setting.getString("main_token", "").length() == 0 && pref_setting.getString("main_instance", "").length() == 0) {
             Intent intent = new Intent(MainActivity.this, AccountTransportActivity.class);
             startActivity(intent);
+            //このActivityを閉じる
+            finish();
         }
 
         //アクセストークン
@@ -82,8 +96,10 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         progressBar.setLayoutParams(layoutParams);
 
         //TL取得
+        toot_list = new ArrayList<>();
+        adapter = new TimelineAdapter(this, R.layout.timeline_layout, toot_list);
         listView = findViewById(R.id.listView);
-        loadTL();
+        loadTL(null);
 
         //NavigationDrawer
         mWearableNavigationDrawer = findViewById(R.id.top_navigation_drawer);
@@ -108,8 +124,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                         timelineURL = "timelines/public?limit=40&access_token=" + accessToken;
                         break;
                 }
-
-                loadTL();
+                listViewLast = false;
+                loadTL(null);
             }
         });
 
@@ -127,18 +143,30 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
 
 
     //タイムラインの読み込み
-    private void loadTL() {
-        ArrayList<TimelineMenuItem> toot_list = new ArrayList<>();
-        final TimelineAdapter adapter = new TimelineAdapter(this, R.layout.timeline_layout, toot_list);
-        adapter.clear();
+
+    /**
+     * @param maxID 追加読み込み時に利用します。nullを入れると追加読み込み機能は無効になります。
+     */
+    private void loadTL(final String maxID) {
+        //追加読み込み時はclearしない
+        if (maxID == null) {
+            adapter.clear();
+        }
         //くるくる（語彙力）をだす
         frameLayout.removeAllViews();
         frameLayout.addView(progressBar);
 
         String url = "https://" + instance + "/api/v1/" + timelineURL;
+        //maxIDある？
+        //パラメータを設定
+        HttpUrl.Builder max_id_builder = HttpUrl.parse(url).newBuilder();
+        if (maxID != null) {
+            max_id_builder.addQueryParameter("max_id", maxID);
+        }
+        String max_id_final_url = max_id_builder.build().toString();
         //作成
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
+                .url(max_id_final_url)
                 .get()
                 .build();
 
@@ -155,7 +183,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
             public void onResponse(Call call, Response response) throws IOException {
                 String response_string = response.body().string();
                 try {
-                    JSONArray jsonArray = new JSONArray(response_string);
+                    final JSONArray jsonArray = new JSONArray(response_string);
                     for (int i = 0; i < jsonArray.length(); i++) {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                             final String display = jsonArray.getJSONObject(i).getJSONObject("account").getString("display_name");
@@ -163,6 +191,10 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             final String avatar = jsonArray.getJSONObject(i).getJSONObject("account").getString("avatar");
                             String toot_id = jsonArray.getJSONObject(i).getString("id");
                             final String accountID = jsonArray.getJSONObject(i).getJSONObject("account").getString("id");
+
+                            //fav/reblog済み確認
+                            String favourited = null;
+                            String reblogged = null;
 
                             String reblogToot = null;
                             String reblogDisplayName = null;
@@ -191,6 +223,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             String memo = null;
                             if (jsonArray.getJSONObject(i).has("content")) {
                                 toot = Html.fromHtml(jsonArray.getJSONObject(i).getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
+                                favourited = jsonArray.getJSONObject(i).getString("favourited");
+                                reblogged = jsonArray.getJSONObject(i).getString("reblogged");
                             } else {
                                 memo = "notification";
                                 type = jsonArray.getJSONObject(i).getString("type");
@@ -208,6 +242,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             final String finalReblogTootID = reblogTootID;
                             final String finalToot_id = toot_id;
                             final String finalMemo = memo;
+                            final String finalFavourited = favourited;
+                            final String finalReblogged = reblogged;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -229,6 +265,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                     arrayList.add(finalReblogAvatar);
                                     arrayList.add(finalReblogAccountID);
                                     arrayList.add(finalReblogTootID);
+                                    arrayList.add(finalFavourited);
+                                    arrayList.add(finalReblogged);
                                     final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
                                     runOnUiThread(new Runnable() {
                                         @Override
@@ -236,6 +274,49 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                             adapter.add(timelineMenuItem);
                                             adapter.notifyDataSetChanged();
                                             listView.setAdapter(adapter);
+                                            listViewLast = false;
+                                            if (maxID != null) {
+                                                listView.setSelectionFromTop(position,y);
+                                            }
+
+                                            //追加読み込みとか
+                                            //System.out.println("数 " + adapter.getCount());
+                                            listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+                                                @Override
+                                                public void onScrollStateChanged(AbsListView view, int scrollState) {
+                                                    position = listView.getFirstVisiblePosition();
+                                                    y = listView.getChildAt(0).getTop();
+                                                }
+
+                                                @Override
+                                                public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                                                    //これ最後だと無限に呼び出されるので最後一度だけ呼ばれるようにする
+                                                    if (firstVisibleItem + visibleItemCount == totalItemCount && !listViewLast) {
+                                                        if (adapter.getCount() >= 30) {
+                                                            //Toast.makeText(MainActivity.this, "最後だよ", Toast.LENGTH_SHORT).show();
+                                                            listViewLast = true;
+                                                            //追加読み込み開始
+                                                            try {
+                                                                //最後（39個目）のToot IDを取得する
+                                                                //通知は30件までしか取れないので条件分岐
+                                                                if (finalMemo != null) {
+                                                                    if (finalMemo.contains("notification")) {
+                                                                        lastID = jsonArray.getJSONObject(29).getString("id");
+                                                                    }
+                                                                } else {
+                                                                    lastID = jsonArray.getJSONObject(39).getString("id");
+                                                                }
+                                                                loadTL(lastID);
+                                                            } catch (JSONException e) {
+                                                                e.printStackTrace();
+                                                            }
+
+                                                        }
+                                                    }
+                                                }
+                                            });
+
+
                                         }
                                     });
                                     frameLayout.removeAllViews();
@@ -250,37 +331,6 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         });
     }
 
-    //ID DisplayName
-    private void MyAccount() {
-        String url = "https://" + instance + "/api/v1/accounts/verify_credentials/?access_token=" + accessToken;
-        //作成
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .get()
-                .build();
-
-        //GETリクエスト
-        OkHttpClient client_1 = new OkHttpClient();
-        client_1.newCall(request).enqueue(new Callback() {
-
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String response_string = response.body().string();
-                try {
-                    JSONObject jsonObject = new JSONObject(response_string);
-                    name = jsonObject.getString("display_name") + " @" + jsonObject.getString("acct");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
@@ -288,7 +338,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         //選択
         switch (itemId) {
             case R.id.menu_reload:
-                loadTL();
+                loadTL(null);
                 break;
             case R.id.menu_toot:
                 Intent intent = new Intent(MainActivity.this, TootActivity.class);
@@ -360,6 +410,38 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
             return drawable;
         }
     }
+
+    //ID DisplayName
+    private void MyAccount() {
+        String url = "https://" + instance + "/api/v1/accounts/verify_credentials/?access_token=" + accessToken;
+        //作成
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        //GETリクエスト
+        OkHttpClient client_1 = new OkHttpClient();
+        client_1.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String response_string = response.body().string();
+                try {
+                    JSONObject jsonObject = new JSONObject(response_string);
+                    name = jsonObject.getString("display_name") + " @" + jsonObject.getString("acct");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
