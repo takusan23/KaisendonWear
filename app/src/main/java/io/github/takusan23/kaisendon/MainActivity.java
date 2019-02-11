@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.wear.ambient.AmbientModeSupport;
 import android.support.wear.widget.drawer.WearableActionDrawerView;
 import android.support.wear.widget.drawer.WearableNavigationDrawerView;
@@ -18,11 +20,6 @@ import android.widget.AbsListView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.Request;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +27,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -40,6 +38,7 @@ import okhttp3.Response;
 public class MainActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener, AmbientModeSupport.AmbientCallbackProvider {
 
     private SharedPreferences pref_setting;
+    //private RecyclerView recyclerView;
     private ListView listView;
     private String timelineURL = "";
     ArrayList<TimelineMenuItem> toot_list;
@@ -54,12 +53,14 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
 
     //名前
     private String name = "";
+    private String userID = "";
 
     //メニュー
     private WearableActionDrawerView mWearableActionDrawer;
     private WearableNavigationDrawerView mWearableNavigationDrawer;
     private FrameLayout frameLayout;
     private ProgressBar progressBar;
+    public static final int MY_ACCOUNT = 0;
 
     //追加読み込み
     private String lastID;
@@ -99,6 +100,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         toot_list = new ArrayList<>();
         adapter = new TimelineAdapter(this, R.layout.timeline_layout, toot_list);
         listView = findViewById(R.id.listView);
+        //recyclerView = findViewById(R.id.listView);
         loadTL(null);
 
         //NavigationDrawer
@@ -143,11 +145,11 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
 
 
     //タイムラインの読み込み
-
     /**
      * @param maxID 追加読み込み時に利用します。nullを入れると追加読み込み機能は無効になります。
      */
     private void loadTL(final String maxID) {
+        final List<TimelineMenuItem> timeline = new ArrayList<>();
         //追加読み込み時はclearしない
         if (maxID == null) {
             adapter.clear();
@@ -203,6 +205,12 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             String reblogAccountID = null;
                             String reblogTootID = null;
 
+                            //画像
+                            String imageURL_1 = null;
+                            String imageURL_2 = null;
+                            String imageURL_3 = null;
+                            String imageURL_4 = null;
+
                             //reblogとか
                             String type = "";
                             if (!jsonArray.getJSONObject(i).isNull("reblog")) {
@@ -222,14 +230,45 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             String toot = "";
                             String memo = null;
                             if (jsonArray.getJSONObject(i).has("content")) {
+                                //通知以外
                                 toot = Html.fromHtml(jsonArray.getJSONObject(i).getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
                                 favourited = jsonArray.getJSONObject(i).getString("favourited");
                                 reblogged = jsonArray.getJSONObject(i).getString("reblogged");
+                                //画像表示
+                                JSONArray media_array = jsonArray.getJSONObject(i).getJSONArray("media_attachments");
+                                if (!media_array.isNull(0)) {
+                                    imageURL_1 = media_array.getJSONObject(0).getString("url");
+                                }
+                                if (!media_array.isNull(1)) {
+                                    imageURL_2 = media_array.getJSONObject(1).getString("url");
+                                }
+                                if (!media_array.isNull(2)) {
+                                    imageURL_3 = media_array.getJSONObject(2).getString("url");
+                                }
+                                if (!media_array.isNull(3)) {
+                                    imageURL_4 = media_array.getJSONObject(3).getString("url");
+                                }
+
                             } else {
+                                //通知
                                 memo = "notification";
                                 type = jsonArray.getJSONObject(i).getString("type");
                                 toot_id = jsonArray.getJSONObject(i).getJSONObject("status").getString("id");
                                 toot = Html.fromHtml(jsonArray.getJSONObject(i).getJSONObject("status").getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
+                                //画像表示
+                                JSONArray media_array = jsonArray.getJSONObject(i).getJSONObject("status").getJSONArray("media_attachments");
+                                if (!media_array.isNull(0)) {
+                                    imageURL_1 = media_array.getJSONObject(0).getString("url");
+                                }
+                                if (!media_array.isNull(1)) {
+                                    imageURL_2 = media_array.getJSONObject(1).getString("url");
+                                }
+                                if (!media_array.isNull(2)) {
+                                    imageURL_3 = media_array.getJSONObject(2).getString("url");
+                                }
+                                if (!media_array.isNull(3)) {
+                                    imageURL_4 = media_array.getJSONObject(3).getString("url");
+                                }
                             }
                             //TextView
                             final String finalToot = toot;
@@ -244,13 +283,17 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                             final String finalMemo = memo;
                             final String finalFavourited = favourited;
                             final String finalReblogged = reblogged;
+                            final String finalImageURL_ = imageURL_1;
+                            final String finalImageURL_1 = imageURL_2;
+                            final String finalImageURL_2 = imageURL_3;
+                            final String finalImageURL_3 = imageURL_4;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    final ArrayList<String> arrayList = new ArrayList<>();
                                     //追加
                                     //配列用意
                                     //通知と分ける
-                                    ArrayList<String> arrayList = new ArrayList<>();
                                     arrayList.add(finalMemo);
                                     arrayList.add(finalType);
                                     arrayList.add(finalToot_id);
@@ -267,6 +310,11 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                     arrayList.add(finalReblogTootID);
                                     arrayList.add(finalFavourited);
                                     arrayList.add(finalReblogged);
+                                    arrayList.add(finalImageURL_);
+                                    arrayList.add(finalImageURL_1);
+                                    arrayList.add(finalImageURL_2);
+                                    arrayList.add(finalImageURL_3);
+
                                     final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
                                     runOnUiThread(new Runnable() {
                                         @Override
@@ -281,6 +329,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
 
                                             //追加読み込みとか
                                             //System.out.println("数 " + adapter.getCount());
+
                                             listView.setOnScrollListener(new AbsListView.OnScrollListener() {
                                                 @Override
                                                 public void onScrollStateChanged(AbsListView view, int scrollState) {
@@ -315,8 +364,6 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                                     }
                                                 }
                                             });
-
-
                                         }
                                     });
                                     frameLayout.removeAllViews();
@@ -343,6 +390,12 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
             case R.id.menu_toot:
                 Intent intent = new Intent(MainActivity.this, TootActivity.class);
                 startActivity(intent);
+                break;
+            case MY_ACCOUNT:
+                Intent accountIntent = new Intent(MainActivity.this,UserActivity.class);
+                accountIntent.putExtra("id",userID);
+                accountIntent.putExtra("my","あなたです！");
+                startActivity(accountIntent);
                 break;
         }
         mWearableActionDrawer.getController().peekDrawer();
@@ -435,6 +488,14 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                 try {
                     JSONObject jsonObject = new JSONObject(response_string);
                     name = jsonObject.getString("display_name") + " @" + jsonObject.getString("acct");
+                    userID = jsonObject.getString("id");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //自分の垢に移動するメニュー
+                            mWearableActionDrawer.getMenu().add(0,MY_ACCOUNT,0,name).setIcon(R.drawable.ic_person_black_24dp);
+                        }
+                    });
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

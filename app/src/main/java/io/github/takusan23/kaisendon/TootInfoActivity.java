@@ -1,5 +1,6 @@
 package io.github.takusan23.kaisendon;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -28,7 +30,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -37,7 +44,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class TootInfoActivity extends WearableActivity implements View.OnClickListener{
+public class TootInfoActivity extends WearableActivity implements View.OnClickListener {
     private SharedPreferences pref_setting;
     //あかうんと
     private String accessToken = "";
@@ -45,10 +52,14 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
 
     private TextView accountTextView;
     private ImageView accountImageView;
+    private LinearLayout accountLinearLayout;
     private TextView tootTextView;
+    private TextView timeTextView;
 
     private ImageButton favImageButton;
     private ImageButton boostImageButton;
+
+    private LinearLayout imageLinearLayout;
 
     private FrameLayout frameLayout;
     private ProgressBar progressBar;
@@ -78,10 +89,14 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
 
         accountTextView = findViewById(R.id.accountTextView);
         accountImageView = findViewById(R.id.accountImageView);
+        accountLinearLayout = findViewById(R.id.accountLinearLayout);
         tootTextView = findViewById(R.id.tootTextView);
+        timeTextView = findViewById(R.id.timeTextView);
 
         favImageButton = findViewById(R.id.TootInfoFavImageButton);
         boostImageButton = findViewById(R.id.TootInfoBoostImageButton);
+
+        imageLinearLayout = findViewById(R.id.tootInfoImageLinearLayout);
 
         frameLayout = findViewById(R.id.TootInfoFrameLayout);
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -134,14 +149,49 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
                         final String toot_id = jsonObject.getString("id");
                         favourited_string = jsonObject.getString("favourited");
                         reblogged_string = jsonObject.getString("reblog");
+                        final String created_at = jsonObject.getString("created_at");
+                        final String userID = jsonObject.getJSONObject("account").getString("id");
+                        //時間表示変換
+                        final String time = timeFormatChange(created_at, "9");
+                        //画像
+                        String imageURL_1 = null;
+                        String imageURL_2 = null;
+                        String imageURL_3 = null;
+                        String imageURL_4 = null;
+                        //画像表示
+                        JSONArray media_array = jsonObject.getJSONArray("media_attachments");
+                        if (!media_array.isNull(0)) {
+                            imageURL_1 = media_array.getJSONObject(0).getString("url");
+                        }
+                        if (!media_array.isNull(1)) {
+                            imageURL_2 = media_array.getJSONObject(1).getString("url");
+                        }
+                        if (!media_array.isNull(2)) {
+                            imageURL_3 = media_array.getJSONObject(2).getString("url");
+                        }
+                        if (!media_array.isNull(3)) {
+                            imageURL_4 = media_array.getJSONObject(3).getString("url");
+                        }
+
+                        final String finalImageURL_ = imageURL_1;
+                        final String finalImageURL_1 = imageURL_2;
+                        final String finalImageURL_2 = imageURL_3;
+                        final String finalImageURL_3 = imageURL_4;
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 //UI
                                 accountTextView.setText(display + "\n" + acct);
                                 tootTextView.setText(toot);
+                                timeTextView.setText(time);
                                 //エミュレーターの場合は時間をしっかり合わせないと動かないよ
                                 Glide.with(TootInfoActivity.this).load(avatar).into(accountImageView);
+
+                                //画像読み込み
+                                loadImage(finalImageURL_,new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_1,new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_2,new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_3,new ImageView(TootInfoActivity.this));
 
                                 if (Boolean.valueOf(favourited_string)) {
                                     favourited = true;
@@ -155,6 +205,17 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
                                     boostIcon.setTint(Color.parseColor("#008000"));
                                     boostImageButton.setImageDrawable(boostIcon);
                                 }
+
+                                //ユーザー情報に画面切り替え
+                                accountLinearLayout.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        Intent intent = new Intent(TootInfoActivity.this,UserActivity.class);
+                                        intent.putExtra("id",userID);
+                                        startActivity(intent);
+                                    }
+                                });
+
                                 //くるくる終了
                                 frameLayout.removeAllViews();
                             }
@@ -206,10 +267,35 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
         }.execute();
     }
 
+    //時間変換
+    /**
+     * @param time    created_atの値
+     * @param addTime 時間調整（例：９）
+     */
+    private String timeFormatChange(String time, String addTime) {
+        String toot_time = time;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        //simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
+        //日本用フォーマット
+        SimpleDateFormat japanDateFormat = new SimpleDateFormat(pref_setting.getString("pref_custom_time_format_text", "yyyy/MM/dd HH:mm:ss.SSS"), Locale.JAPAN);
+        try {
+            Date date = simpleDateFormat.parse(time);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            //9時間足して日本時間へ
+            calendar.add(Calendar.HOUR, +Integer.valueOf(addTime));
+            //System.out.println("時間 : " + japanDateFormat.format(calendar.getTime()));
+            toot_time = japanDateFormat.format(calendar.getTime());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return toot_time;
+    }
+
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.TootInfoFavImageButton:
                 if (favourited) {
                     TootAction(tootID, "unfavourite", favImageButton);
@@ -222,6 +308,21 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
                 } else {
                     TootAction(tootID, "reblog", boostImageButton);
                 }
+        }
+    }
+
+    //画像
+    private void loadImage(String url, ImageView imageView) {
+        if (url != null) {
+            //ViewGroup.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            //imageView.setLayoutParams(layoutParams);
+            //呼び出し（こっわ
+            if (imageView.getParent() != null) {
+                ((ViewGroup) imageView.getParent()).removeView(imageView);
+            }
+            //読み込む
+            Glide.with(TootInfoActivity.this).load(url).into(imageView);
+            imageLinearLayout.addView(imageView);
         }
     }
 }

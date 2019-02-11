@@ -27,8 +27,11 @@
             android:value="true" />
 
         <activity
+            android:name=".UserActivity"
+            android:label="@string/title_activity_user"></activity>
+        <activity
             android:name=".TootInfoActivity"
-            android:label="@string/title_activity_toot_info"></activity>
+            android:label="@string/title_activity_toot_info" />
         <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
         <activity
             android:name=".TootActivity"

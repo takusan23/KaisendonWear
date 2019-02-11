@@ -18,4 +18,10 @@
     <string name="reblog">Boosted</string>
     <string name="follow">Followed</string>
     <string name="title_activity_toot_info">TootInfoActivity</string>
+    <string name="title_activity_user">UserActivity</string>
+    <string name="follow_button">Follow!</string>
+    <string name="follower_count">Follower</string>
+    <string name="follow_count">Follow</string>
+    <string name="created_at">Create</string>
+    <string name="toot_count">Toot</string>
 </resources>

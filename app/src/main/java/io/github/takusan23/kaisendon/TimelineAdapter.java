@@ -61,13 +61,13 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         super(context, resource, items);
         mResource = resource;
         mItems = items;
-        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater = LayoutInflater.from(context);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
-        final ViewHolder holder;
+        ViewHolder holder;
         //設定読み込み
         pref_setting = PreferenceManager.getDefaultSharedPreferences(getContext());
         //アクセストークン
@@ -75,9 +75,8 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         instance = pref_setting.getString("main_instance", "");
 
         if (convertView == null) {
-            view = mInflater.inflate(R.layout.timeline_layout, parent, false);
+            view = mInflater.inflate(R.layout.timeline_layout, null);
             holder = new ViewHolder();
-
             holder.avatarImageView = view.findViewById(R.id.timelineImageView);
             holder.tootTextView = view.findViewById(R.id.timelineTextView);
             holder.nameTextView = view.findViewById(R.id.nametimelineTextView);
@@ -85,6 +84,12 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
             holder.buttonLinearLayout = view.findViewById(R.id.buttonLinearLayout);
             holder.favImageButton = view.findViewById(R.id.favImageButton);
             holder.boostImageButton = view.findViewById(R.id.boostImageButton);
+            holder.imageLinearLayout = view.findViewById(R.id.imageLinearLayout);
+
+            holder.imageView1 = new ImageView(getContext());
+            holder.imageView2 = new ImageView(getContext());
+            holder.imageView3 = new ImageView(getContext());
+            holder.imageView4 = new ImageView(getContext());
 
             view.setTag(holder);
         } else {
@@ -115,6 +120,12 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         //fav/reblog
         String favourited_string = timelineItem.get(14);
         String reblogged_string = timelineItem.get(15);
+        //Image URL
+        String imageURL_1 = timelineItem.get(16);
+        String imageURL_2 = timelineItem.get(17);
+        String imageURL_3 = timelineItem.get(18);
+        String imageURL_4 = timelineItem.get(19);
+
         boolean favourited = false;
         boolean reblogged = false;
         if (Boolean.valueOf(favourited_string)) {
@@ -203,29 +214,37 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
 
         //Favouriteする
         final boolean finalFavourited = favourited;
+        final ImageButton favImageButton = holder.favImageButton;
         holder.favImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //fav済み？
                 if (finalFavourited) {
-                    TootAction(tootID, "unfavourite", holder.favImageButton);
+                    TootAction(tootID, "unfavourite", favImageButton);
                 } else {
-                    TootAction(tootID, "favourite", holder.favImageButton);
+                    TootAction(tootID, "favourite", favImageButton);
                 }
             }
         });
         //Boostする
         final boolean finalReblogged = reblogged;
+        final ImageButton btImageButton = holder.boostImageButton;
         holder.boostImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (finalReblogged) {
-                    TootAction(tootID, "unreblog", holder.boostImageButton);
+                    TootAction(tootID, "unreblog", btImageButton);
                 } else {
-                    TootAction(tootID, "reblog", holder.boostImageButton);
+                    TootAction(tootID, "reblog", btImageButton);
                 }
             }
         });
+
+        //画像
+        loadImage(imageURL_1, holder.imageLinearLayout, holder.imageView1);
+        loadImage(imageURL_2, holder.imageLinearLayout, holder.imageView2);
+        loadImage(imageURL_3, holder.imageLinearLayout, holder.imageView3);
+        loadImage(imageURL_4, holder.imageLinearLayout, holder.imageView4);
 
         return view;
     }
@@ -291,14 +310,50 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         }.execute();
     }
 
+    //画像
+    private void loadImage(String url, LinearLayout linearLayout, ImageView imageView) {
+        if (url != null) {
+            ViewGroup.LayoutParams layoutParams = new LinearLayout.LayoutParams(100, 100);
+            imageView.setLayoutParams(layoutParams);
+            //呼び出し（こっわ
+            if (imageView.getParent() != null) {
+                ((ViewGroup) imageView.getParent()).removeView(imageView);
+            }
+            //読み込む
+            Glide.with(getContext()).load(url).into(imageView);
+            linearLayout.addView(imageView);
+        }else{
+            //本家版ではここの処理がいらないはずなんだけど
+            //ListView再利用に巻き込まれていらないところに画像が表示されるので
+            //見えないレベルでのImageViewを追加することにした。
+            //もちろん何も読み込んでいない
+
+            ViewGroup.LayoutParams layoutParams = new LinearLayout.LayoutParams(0, 0);
+            imageView.setLayoutParams(layoutParams);
+            //呼び出し（こっわ
+            if (imageView.getParent() != null) {
+                ((ViewGroup) imageView.getParent()).removeView(imageView);
+            }
+            //読み込む
+            Glide.with(getContext()).load("").into(imageView);
+            linearLayout.addView(imageView);
+        }
+    }
+
     private class ViewHolder {
         TextView nameTextView;
         TextView tootTextView;
         ImageView avatarImageView;
         LinearLayout linearLayout;
         LinearLayout buttonLinearLayout;
+        LinearLayout imageLinearLayout;
         ImageButton favImageButton;
         ImageButton boostImageButton;
+        ImageView imageView1;
+        ImageView imageView2;
+        ImageView imageView3;
+        ImageView imageView4;
+
     }
 
 }
