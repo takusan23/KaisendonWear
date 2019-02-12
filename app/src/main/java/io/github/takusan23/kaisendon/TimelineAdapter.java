@@ -85,6 +85,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
             holder.favImageButton = view.findViewById(R.id.favImageButton);
             holder.boostImageButton = view.findViewById(R.id.boostImageButton);
             holder.imageLinearLayout = view.findViewById(R.id.imageLinearLayout);
+            holder.mainLinearLayout = view.findViewById(R.id.timelineMainLinearLayout);
 
             holder.imageView1 = new ImageView(getContext());
             holder.imageView2 = new ImageView(getContext());
@@ -155,9 +156,14 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         //本文
         holder.tootTextView.setText(tootText);
         //画像
-        Glide.with(getContext())
-                .load(avatarURL)
-                .into(holder.avatarImageView);
+        //非表示設定？
+        if (pref_setting.getBoolean("image_load", false)) {
+            //読み込む
+            Glide.with(getContext()).load(avatarURL).into(holder.avatarImageView);
+        } else {
+            //レイアウトから消す
+            holder.mainLinearLayout.removeView(holder.avatarImageView);
+        }
 
         //メモー通知のアイコン設定
         if (type != null) {
@@ -241,10 +247,13 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         });
 
         //画像
-        loadImage(imageURL_1, holder.imageLinearLayout, holder.imageView1);
-        loadImage(imageURL_2, holder.imageLinearLayout, holder.imageView2);
-        loadImage(imageURL_3, holder.imageLinearLayout, holder.imageView3);
-        loadImage(imageURL_4, holder.imageLinearLayout, holder.imageView4);
+        if (pref_setting.getBoolean("image_load", false)) {
+            loadImage(imageURL_1, holder.imageLinearLayout, holder.imageView1);
+            loadImage(imageURL_2, holder.imageLinearLayout, holder.imageView2);
+            loadImage(imageURL_3, holder.imageLinearLayout, holder.imageView3);
+            loadImage(imageURL_4, holder.imageLinearLayout, holder.imageView4);
+        }
+
 
         return view;
     }
@@ -322,7 +331,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
             //読み込む
             Glide.with(getContext()).load(url).into(imageView);
             linearLayout.addView(imageView);
-        }else{
+        } else {
             //本家版ではここの処理がいらないはずなんだけど
             //ListView再利用に巻き込まれていらないところに画像が表示されるので
             //見えないレベルでのImageViewを追加することにした。
@@ -344,6 +353,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         TextView nameTextView;
         TextView tootTextView;
         ImageView avatarImageView;
+        LinearLayout mainLinearLayout;
         LinearLayout linearLayout;
         LinearLayout buttonLinearLayout;
         LinearLayout imageLinearLayout;

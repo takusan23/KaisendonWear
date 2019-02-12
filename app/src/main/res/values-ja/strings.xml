@@ -23,4 +23,6 @@
     <string name="follow_count">フォロー</string>
     <string name="created_at">作成時</string>
     <string name="toot_count">トゥート</string>
+    <string name="update">更新</string>
+    <string name="image_load">画像表示</string>
 </resources>

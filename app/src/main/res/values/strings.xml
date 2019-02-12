@@ -24,4 +24,6 @@
     <string name="follow_count">Follow</string>
     <string name="created_at">Create</string>
     <string name="toot_count">Toot</string>
+    <string name="update">Update</string>
+    <string name="image_load">Image Load</string>
 </resources>
