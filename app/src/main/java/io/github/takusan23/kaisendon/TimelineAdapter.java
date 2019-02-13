@@ -195,6 +195,9 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
             holder.tootTextView.setText(reblogToot);
             //画像
             Glide.with(getContext()).load(reblogAvatar).into(holder.avatarImageView);
+            holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_repeat_black_24dp_2, 0, 0, 0);
+        }else{
+            holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
 
         //Toot本文クリックしたら詳細画面へ飛ばす
