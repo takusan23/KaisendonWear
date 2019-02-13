@@ -37,6 +37,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
@@ -220,28 +221,34 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
 
         //Favouriteする
         final boolean finalFavourited = favourited;
+        final boolean[] clickFav = {false};
         final ImageButton favImageButton = holder.favImageButton;
         holder.favImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //fav済み？
-                if (finalFavourited) {
+                if (finalFavourited || clickFav[0]) {
                     TootAction(tootID, "unfavourite", favImageButton);
+                    clickFav[0] = false;
                 } else {
                     TootAction(tootID, "favourite", favImageButton);
+                    clickFav[0] = true;
                 }
             }
         });
         //Boostする
         final boolean finalReblogged = reblogged;
+        final boolean[] clickBT = {false};
         final ImageButton btImageButton = holder.boostImageButton;
         holder.boostImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (finalReblogged) {
+                if (finalReblogged || clickBT[0]) {
                     TootAction(tootID, "unreblog", btImageButton);
+                    clickBT[0] = true;
                 } else {
                     TootAction(tootID, "reblog", btImageButton);
+                    clickBT[0] = false;
                 }
             }
         });
@@ -281,42 +288,29 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
 
     //Favourite、ReblogをPOSTするためのメゾット
     public void TootAction(final String id, final String endPoint, final ImageButton imageButton) {
-        new AsyncTask<String, Void, String>() {
+        //Favouriteする
+        String url = "https://" + instance + "/api/v1/statuses/" + id + "/" + endPoint + "/?access_token=" + accessToken;
+        //ぱらめーたー
+        RequestBody requestBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
+
+        //POST
+        OkHttpClient client = new OkHttpClient();
+        client.newCall(request).enqueue(new Callback() {
             @Override
-            protected String doInBackground(String... params) {
-                MastodonClient client = new MastodonClient.Builder(instance, new OkHttpClient.Builder(), new Gson()).accessToken(accessToken).build();
-                RequestBody requestBody = new FormBody.Builder()
-                        .build();
-                client.post("statuses/" + id + "/" + endPoint, requestBody);
-                return id;
+            public void onFailure(Call call, IOException e) {
+
             }
 
             @Override
-            protected void onPostExecute(String result) {
-/*
-                if (endPoint.contains("reblog")) {
-                    Drawable boostIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_repeat_black_24dp_2, null);
-                    boostIcon.setTint(Color.parseColor("#008000"));
-                    imageButton.setImageDrawable(boostIcon);
-                }
-                if (endPoint.contains("favourite")) {
-                    Drawable favIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_star_border_black_24dp_2, null);
-                    favIcon.setTint(Color.parseColor("#ffd700"));
-                    imageButton.setImageDrawable(favIcon);
-                }
-                if (endPoint.contains("unfavourite")) {
-                    Drawable favIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_star_border_black_24dp_2, null);
-                    favIcon.setTint(Color.parseColor("#000000"));
-                    imageButton.setImageDrawable(favIcon);
-                }
-                if (endPoint.contains("unreblog")) {
-                    Drawable boostIcon = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.ic_repeat_black_24dp_2, null);
-                    boostIcon.setTint(Color.parseColor("#000000"));
-                    imageButton.setImageDrawable(boostIcon);
-                }
-*/
+            public void onResponse(Call call, Response response) throws IOException {
+
             }
-        }.execute();
+        });
     }
 
     //画像

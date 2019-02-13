@@ -41,10 +41,11 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class TootInfoActivity extends WearableActivity implements View.OnClickListener {
+public class TootInfoActivity extends WearableActivity {
     private SharedPreferences pref_setting;
     //あかうんと
     private String accessToken = "";
@@ -108,8 +109,30 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
         tootInfo();
 
         //fav/btする
-        favImageButton.setOnClickListener(this);
-        boostImageButton.setOnClickListener(this);
+        favImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (favourited) {
+                    TootAction(tootID, "unfavourite", favImageButton);
+                    favourited = false;
+                } else {
+                    TootAction(tootID, "favourite", favImageButton);
+                    favourited = true;
+                }
+            }
+        });
+        boostImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (reblogged) {
+                    TootAction(tootID, "unreblog", boostImageButton);
+                    reblogged = false;
+                } else {
+                    TootAction(tootID, "reblog", boostImageButton);
+                    reblogged = true;
+                }
+            }
+        });
 
         // Enables Always-on
         setAmbientEnabled();
@@ -231,40 +254,48 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
 
     //Favourite、ReblogをPOSTするためのメゾット
     public void TootAction(final String id, final String endPoint, final ImageButton imageButton) {
-        new AsyncTask<String, Void, String>() {
+        //Favouriteする
+        String url = "https://" + instance + "/api/v1/statuses/" + id + "/" + endPoint + "/?access_token=" + accessToken;
+        //ぱらめーたー
+        RequestBody requestBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
+
+        //POST
+        OkHttpClient client = new OkHttpClient();
+        client.newCall(request).enqueue(new Callback() {
             @Override
-            protected String doInBackground(String... params) {
-                MastodonClient client = new MastodonClient.Builder(instance, new OkHttpClient.Builder(), new Gson()).accessToken(accessToken).build();
-                RequestBody requestBody = new FormBody.Builder()
-                        .build();
-                client.post("statuses/" + id + "/" + endPoint, requestBody);
-                return id;
+            public void onFailure(Call call, IOException e) {
+
             }
 
             @Override
-            protected void onPostExecute(String result) {
+            public void onResponse(Call call, Response response) throws IOException {
                 if (endPoint.contains("reblog")) {
-                    Drawable boostIcon = ResourcesCompat.getDrawable(TootInfoActivity.this.getResources(), R.drawable.ic_repeat_black_24dp, null);
+                    Drawable boostIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_repeat_black_24dp_2, null);
                     boostIcon.setTint(Color.parseColor("#008000"));
                     imageButton.setImageDrawable(boostIcon);
                 }
                 if (endPoint.contains("favourite")) {
-                    Drawable favIcon = ResourcesCompat.getDrawable(TootInfoActivity.this.getResources(), R.drawable.ic_star_border_black_24dp, null);
+                    Drawable favIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_star_border_black_24dp_2, null);
                     favIcon.setTint(Color.parseColor("#ffd700"));
                     imageButton.setImageDrawable(favIcon);
                 }
                 if (endPoint.contains("unfavourite")) {
-                    Drawable favIcon = ResourcesCompat.getDrawable(TootInfoActivity.this.getResources(), R.drawable.ic_star_border_black_24dp, null);
-                    favIcon.setTint(Color.parseColor("#000000"));
+                    Drawable favIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_star_border_black_24dp_2, null);
+                    favIcon.setTint(Color.parseColor("#ffffff"));
                     imageButton.setImageDrawable(favIcon);
                 }
                 if (endPoint.contains("unreblog")) {
-                    Drawable boostIcon = ResourcesCompat.getDrawable(TootInfoActivity.this.getResources(), R.drawable.ic_repeat_black_24dp, null);
-                    boostIcon.setTint(Color.parseColor("#000000"));
+                    Drawable boostIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_repeat_black_24dp_2, null);
+                    boostIcon.setTint(Color.parseColor("#ffffff"));
                     imageButton.setImageDrawable(boostIcon);
                 }
             }
-        }.execute();
+        });
     }
 
     //時間変換
@@ -290,25 +321,6 @@ public class TootInfoActivity extends WearableActivity implements View.OnClickLi
             e.printStackTrace();
         }
         return toot_time;
-    }
-
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.TootInfoFavImageButton:
-                if (favourited) {
-                    TootAction(tootID, "unfavourite", favImageButton);
-                } else {
-                    TootAction(tootID, "favourite", favImageButton);
-                }
-            case R.id.TootInfoBoostImageButton:
-                if (reblogged) {
-                    TootAction(tootID, "unreblog", boostImageButton);
-                } else {
-                    TootAction(tootID, "reblog", boostImageButton);
-                }
-        }
     }
 
     //画像

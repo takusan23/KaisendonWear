@@ -61,7 +61,7 @@ public class TootActivity extends WearableActivity {
                     @Override
                     public void onTimerFinished(CircularProgressLayout circularProgressLayout) {
                         //POST
-                        UpdateStatus(editText.getText().toString(), "direct");
+                        UpdateStatus(editText.getText().toString(), "public");
                     }
                 });
                 //キャンセル
