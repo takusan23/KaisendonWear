@@ -26,4 +26,5 @@
     <string name="toot_count">Toot</string>
     <string name="update">Update</string>
     <string name="image_load">Image Load</string>
+    <string name="title_activity_user_list">UserListActivity</string>
 </resources>

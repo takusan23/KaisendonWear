@@ -217,7 +217,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
 
         //通知のMention以外の場合はレイアウト消す
         if (type != null) {
-            if (type.contains("notification") && !memo.contains("mention")) {
+            if (type.contains("notification") && !memo.contains("mention") || memo.contains("userList")) {
                 holder.buttonLinearLayout.removeAllViews();
             }
         }

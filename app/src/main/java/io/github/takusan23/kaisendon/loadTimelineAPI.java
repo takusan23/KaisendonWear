@@ -1,43 +1,16 @@
 package io.github.takusan23.kaisendon;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
-import android.os.Build;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.widget.LinearSmoothScroller;
-import android.support.wearable.activity.WearableActivity;
+import android.app.Activity;
 import android.text.Html;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-
-import com.bumptech.glide.Glide;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -45,219 +18,33 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
-public class UserActivity extends WearableActivity {
+public class loadTimelineAPI {
 
-    private SharedPreferences pref_setting;
-    //あかうんと
-    private String accessToken = "";
-    private String instance = "";
+
+    //追加読み込み
+    private static String lastID;
+    private static boolean last = false;
+    //スクロール位置保持
+    private static int position;
+    private static int y;
     //UserID
-    private String userID;
-
-    private ImageView headerImageView;
-    private ImageView avatarImageView;
-    private TextView nameTextView;
-    private TextView noteTextView;
-    private Button followButton;
-    private ListView listView;
-    private Button created_at_TextView;
-    private Button followCount;
-    private Button followerCount;
-    private Button tootCount;
-
-    ArrayList<TimelineMenuItem> toot_list;
-    TimelineAdapter adapter;
-
-    private FrameLayout frameLayout;
-    private ProgressBar progressBar;
-
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_user);
-
-        //Intentからデータを貰う
-        userID = getIntent().getStringExtra("id");
-        //自分の場合
-        String my = getIntent().getStringExtra("my");
-
-        //設定読み込み
-        pref_setting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        accessToken = pref_setting.getString("main_token", "");
-        instance = pref_setting.getString("main_instance", "");
-
-        headerImageView = findViewById(R.id.userHeader);
-        headerImageView.setScaleType(ImageView.ScaleType.CENTER);
-        avatarImageView = findViewById(R.id.userAvatar);
-        nameTextView = findViewById(R.id.userNameTextView);
-        noteTextView = findViewById(R.id.noteTextView);
-        followButton = findViewById(R.id.followButton);
-        followCount = findViewById(R.id.followCount);
-        followerCount = findViewById(R.id.followerCount);
-        tootCount = findViewById(R.id.tootCount);
-        created_at_TextView = findViewById(R.id.created_at);
-
-        frameLayout = findViewById(R.id.UserFrameLayout);
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity = Gravity.CENTER;
-        progressBar = new ProgressBar(this);
-        progressBar.setLayoutParams(layoutParams);
-
-        //読み込み
-        loadAccount();
-
-        //自分
-        if (my != null){
-            followButton.setText(my);
-        }
-
-        //TL読み込み用
-        toot_list = new ArrayList<>();
-        adapter = new TimelineAdapter(this, R.layout.timeline_layout, toot_list);
-
-        //ボタンクリック処理
-        tootCount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toot
-                Intent intent = new Intent(UserActivity.this,UserListActivity.class);
-                intent.putExtra("id",userID);
-                intent.putExtra("type",1);
-                startActivity(intent);
-            }
-        });
-        followCount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toot
-                Intent intent = new Intent(UserActivity.this,UserListActivity.class);
-                intent.putExtra("id",userID);
-                intent.putExtra("type",2);
-                startActivity(intent);
-            }
-        });
-        followerCount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toot
-                Intent intent = new Intent(UserActivity.this,UserListActivity.class);
-                intent.putExtra("id",userID);
-                intent.putExtra("type",3);
-                startActivity(intent);
-            }
-        });
-
-        // Enables Always-on
-        setAmbientEnabled();
-    }
-
-    private void loadAccount() {
-        //くるくる（語彙力）をだす
-        frameLayout.removeAllViews();
-        frameLayout.addView(progressBar);
-        String url = "https://" + instance + "/api/v1/accounts/" + userID;
-        //作成
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .get()
-                .build();
-
-        //GETリクエスト
-        OkHttpClient client_1 = new OkHttpClient();
-        client_1.newCall(request).enqueue(new Callback() {
-
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String response_string = response.body().string();
-                try {
-                    JSONObject jsonObject = new JSONObject(response_string);
-                    final String display_name = jsonObject.getString("display_name");
-                    final String acct = jsonObject.getString("acct");
-                    final String header = jsonObject.getString("header");
-                    final String avatar = jsonObject.getString("avatar");
-                    final String note = jsonObject.getString("note");
-                    final String follow = jsonObject.getString("following_count");
-                    final String follower = jsonObject.getString("followers_count");
-                    final String statuses_count = jsonObject.getString("statuses_count");
-                    final String created_at = timeFormatChange(jsonObject.getString("created_at"), "9");
-
-                    //UI Thread
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //名前
-                            nameTextView.setText(display_name + "\n@" + acct);
-                            //説明文
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                noteTextView.setText(Html.fromHtml(note, Html.FROM_HTML_MODE_COMPACT));
-                            }
-                            //数
-                            followCount.setText(getString(R.string.follow_count) + " : " + follow);
-                            followerCount.setText(getString(R.string.follower_count) + " : " + follower);
-                            tootCount.setText(getString(R.string.toot_count) + " : " + statuses_count);
-                            created_at_TextView.setText(getString(R.string.created_at) + " : " + created_at);
-
-                            //画像
-                            Glide.with(UserActivity.this).load(header).into(headerImageView);
-                            Glide.with(UserActivity.this).load(avatar).into(avatarImageView);
-
-                            //くるくる終了
-                            frameLayout.removeAllViews();
-
-                        }
-                    });
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    //時間変換
+    private static int userID;
 
     /**
-     * @param time    created_atの値
-     * @param addTime 時間調整（例：９）
+     * @param activity        UIスレッド・Context用
+     * @param timelineAdapter ListViewのAdapter
+     * @param listView        ListView
+     * @param url             APIのURL
+     * @param maxID           追加読み込み。追加読込しない場合はnullを入れてね
      */
-    private String timeFormatChange(String time, String addTime) {
-        String toot_time = time;
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        //simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
-        //日本用フォーマット
-        SimpleDateFormat japanDateFormat = new SimpleDateFormat(pref_setting.getString("pref_custom_time_format_text", "yyyy/MM/dd HH:mm:ss.SSS"), Locale.JAPAN);
-        try {
-            Date date = simpleDateFormat.parse(time);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            //9時間足して日本時間へ
-            calendar.add(Calendar.HOUR, +Integer.valueOf(addTime));
-            //System.out.println("時間 : " + japanDateFormat.format(calendar.getTime()));
-            toot_time = japanDateFormat.format(calendar.getTime());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return toot_time;
-    }
-
-
-    //タイムラインの読み込み
-    private void loadTL() {
-        //くるくる（語彙力）をだす
-        frameLayout.removeAllViews();
-        frameLayout.addView(progressBar);
-
-        String url = "https://" + instance + "/api/v1/accounts/" + userID + "/statuses?access_token=" + accessToken;
+    public static void loadTimeline(final Activity activity, final TimelineAdapter timelineAdapter, final ListView listView, final String url, final String maxID) {
+        final ListView returnListView = listView;
         //maxIDある？
         //パラメータを設定
         HttpUrl.Builder max_id_builder = HttpUrl.parse(url).newBuilder();
+        if (maxID != null) {
+            max_id_builder.addQueryParameter("max_id", maxID);
+        }
         String max_id_final_url = max_id_builder.build().toString();
         //作成
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -380,7 +167,7 @@ public class UserActivity extends WearableActivity {
                             final String finalImageURL_1 = imageURL_2;
                             final String finalImageURL_2 = imageURL_3;
                             final String finalImageURL_3 = imageURL_4;
-                            runOnUiThread(new Runnable() {
+                            activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     final ArrayList<String> arrayList = new ArrayList<>();
@@ -409,15 +196,57 @@ public class UserActivity extends WearableActivity {
                                     arrayList.add(finalImageURL_3);
 
                                     final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
-                                    runOnUiThread(new Runnable() {
+                                    activity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            adapter.add(timelineMenuItem);
-                                            adapter.notifyDataSetChanged();
-                                            listView.setAdapter(adapter);
+                                            timelineAdapter.add(timelineMenuItem);
+                                            timelineAdapter.notifyDataSetChanged();
+                                            returnListView.setAdapter(timelineAdapter);
+                                            last = false;
+                                            if (maxID != null) {
+                                                returnListView.setSelectionFromTop(position, y);
+                                            }
+
+                                            //追加読み込みとか
+                                            //System.out.println("数 " + adapter.getCount());
+
+                                            returnListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+                                                @Override
+                                                public void onScrollStateChanged(AbsListView view, int scrollState) {
+                                                    position = returnListView.getFirstVisiblePosition();
+                                                    y = returnListView.getChildAt(0).getTop();
+                                                }
+
+                                                @Override
+                                                public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                                                    //これ最後だと無限に呼び出されるので最後一度だけ呼ばれるようにする
+                                                    if (firstVisibleItem + visibleItemCount == totalItemCount && !last) {
+                                                        if (timelineAdapter.getCount() >= 30) {
+                                                            //Toast.makeText(MainActivity.this, "最後だよ", Toast.LENGTH_SHORT).show();
+                                                            last = true;
+                                                            //追加読み込み開始
+                                                            try {
+                                                                //最後（39個目）のToot IDを取得する
+                                                                //通知は30件までしか取れないので条件分岐
+                                                                if (finalMemo != null) {
+                                                                    if (finalMemo.contains("notification")) {
+                                                                        lastID = jsonArray.getJSONObject(29).getString("id");
+                                                                    }
+                                                                } else {
+                                                                    lastID = jsonArray.getJSONObject(39).getString("id");
+                                                                }
+                                                                loadTimeline(activity, timelineAdapter, listView, url, maxID);
+                                                            } catch (JSONException e) {
+                                                                e.printStackTrace();
+                                                            }
+
+                                                        }
+                                                    }
+                                                }
+                                            });
                                         }
                                     });
-                                    frameLayout.removeAllViews();
+                                    //frameLayout.removeAllViews();
                                 }
                             });
                         }
@@ -427,6 +256,111 @@ public class UserActivity extends WearableActivity {
                 }
             }
         });
-
+        //return returnListView;
     }
+
+    /**
+     * フォロー・フォロワーを取得するのに使います
+     * @param activity        UIスレッド・Context用
+     * @param timelineAdapter ListViewのAdapter
+     * @param listView        ListView
+     * @param url             APIのURL。パラメーター等はURLに入れた状態にしてね
+     * @param maxID           追加読み込み。追加読込しない場合はnullを入れてね
+     */
+
+    public static void loadFollow(final Activity activity, final TimelineAdapter timelineAdapter, final ListView listView, final String url, final String maxID) {
+        final ListView returnListView = listView;
+        //maxIDある？
+        //パラメータを設定
+        HttpUrl.Builder max_id_builder = HttpUrl.parse(url).newBuilder();
+        if (maxID != null) {
+            max_id_builder.addQueryParameter("max_id", maxID);
+        }
+        String max_id_final_url = max_id_builder.build().toString();
+        //作成
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(max_id_final_url)
+                .get()
+                .build();
+
+        //GETリクエスト
+        OkHttpClient client_1 = new OkHttpClient();
+        client_1.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String response_string = response.body().string();
+                try {
+                    final JSONArray jsonArray = new JSONArray(response_string);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            final String acct = jsonArray.getJSONObject(i).getString("acct");
+                            final String display = jsonArray.getJSONObject(i).getString("display_name");
+                            final String accountID = jsonArray.getJSONObject(i).getString("id");
+                            final String avatar = jsonArray.getJSONObject(i).getString("avatar");
+
+
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final ArrayList<String> arrayList = new ArrayList<>();
+                                    //追加
+                                    //配列用意
+                                    //通知と分ける
+                                    arrayList.add("");
+                                    arrayList.add("userList");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add(display);
+                                    arrayList.add(acct);
+                                    arrayList.add(avatar);
+                                    arrayList.add(accountID);
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+                                    arrayList.add("");
+
+                                    final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
+                                    activity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            timelineAdapter.add(timelineMenuItem);
+                                            timelineAdapter.notifyDataSetChanged();
+                                            returnListView.setAdapter(timelineAdapter);
+                                            last = false;
+                                            if (maxID != null) {
+                                                returnListView.setSelectionFromTop(position, y);
+                                            }
+
+                                            //追加読み込みとか
+                                            //System.out.println("数 " + adapter.getCount());
+                                        }
+                                    });
+                                    //frameLayout.removeAllViews();
+                                }
+                            });
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        //return returnListView;
+    }
+
+
 }

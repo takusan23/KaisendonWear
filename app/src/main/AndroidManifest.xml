@@ -27,8 +27,17 @@
             android:value="true" />
 
         <activity
+            android:name=".UserListActivity"
+            android:label="@string/title_activity_user_list">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".UserActivity"
-            android:label="@string/title_activity_user"></activity>
+            android:label="@string/title_activity_user" />
         <activity
             android:name=".TootInfoActivity"
             android:label="@string/title_activity_toot_info" />
