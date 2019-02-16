@@ -3,6 +3,7 @@ package io.github.takusan23.kaisendon;
 import android.app.Activity;
 import android.text.Html;
 import android.widget.AbsListView;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 
 import org.json.JSONArray;
@@ -36,8 +37,9 @@ public class loadTimelineAPI {
      * @param listView        ListView
      * @param url             APIのURL
      * @param maxID           追加読み込み。追加読込しない場合はnullを入れてね
+     * @param frameLayout     くるくるを消すときに使う
      */
-    public static void loadTimeline(final Activity activity, final TimelineAdapter timelineAdapter, final ListView listView, final String url, final String maxID) {
+    public static void loadTimeline(final Activity activity, final TimelineAdapter timelineAdapter, final ListView listView, final String url, final String maxID, final FrameLayout frameLayout) {
         final ListView returnListView = listView;
         //maxIDある？
         //パラメータを設定
@@ -207,6 +209,9 @@ public class loadTimelineAPI {
                                                 returnListView.setSelectionFromTop(position, y);
                                             }
 
+                                            //くるくる終了
+                                            frameLayout.removeAllViews();
+
                                             //追加読み込みとか
                                             //System.out.println("数 " + adapter.getCount());
 
@@ -235,7 +240,7 @@ public class loadTimelineAPI {
                                                                 } else {
                                                                     lastID = jsonArray.getJSONObject(39).getString("id");
                                                                 }
-                                                                loadTimeline(activity, timelineAdapter, listView, url, maxID);
+                                                                loadTimeline(activity, timelineAdapter, listView, url, maxID, frameLayout);
                                                             } catch (JSONException e) {
                                                                 e.printStackTrace();
                                                             }
@@ -261,21 +266,19 @@ public class loadTimelineAPI {
 
     /**
      * フォロー・フォロワーを取得するのに使います
+     *
      * @param activity        UIスレッド・Context用
      * @param timelineAdapter ListViewのAdapter
      * @param listView        ListView
      * @param url             APIのURL。パラメーター等はURLに入れた状態にしてね
-     * @param maxID           追加読み込み。追加読込しない場合はnullを入れてね
+     * @param frameLayout     くるくるを消すときに
      */
 
-    public static void loadFollow(final Activity activity, final TimelineAdapter timelineAdapter, final ListView listView, final String url, final String maxID) {
+    public static void loadFollow(final Activity activity, final TimelineAdapter timelineAdapter, final ListView listView, final String url, final FrameLayout frameLayout) {
         final ListView returnListView = listView;
         //maxIDある？
         //パラメータを設定
         HttpUrl.Builder max_id_builder = HttpUrl.parse(url).newBuilder();
-        if (maxID != null) {
-            max_id_builder.addQueryParameter("max_id", maxID);
-        }
         String max_id_final_url = max_id_builder.build().toString();
         //作成
         okhttp3.Request request = new okhttp3.Request.Builder()
@@ -303,6 +306,8 @@ public class loadTimelineAPI {
                             final String display = jsonArray.getJSONObject(i).getString("display_name");
                             final String accountID = jsonArray.getJSONObject(i).getString("id");
                             final String avatar = jsonArray.getJSONObject(i).getString("avatar");
+                            final String note = jsonArray.getJSONObject(i).getString("note");
+                            final String note_String = Html.fromHtml(note, Html.FROM_HTML_MODE_COMPACT).toString();
 
 
                             activity.runOnUiThread(new Runnable() {
@@ -315,7 +320,7 @@ public class loadTimelineAPI {
                                     arrayList.add("");
                                     arrayList.add("userList");
                                     arrayList.add("");
-                                    arrayList.add("");
+                                    arrayList.add(note_String);
                                     arrayList.add(display);
                                     arrayList.add(acct);
                                     arrayList.add(avatar);
@@ -341,9 +346,8 @@ public class loadTimelineAPI {
                                             timelineAdapter.notifyDataSetChanged();
                                             returnListView.setAdapter(timelineAdapter);
                                             last = false;
-                                            if (maxID != null) {
-                                                returnListView.setSelectionFromTop(position, y);
-                                            }
+                                            //くるくる終了
+                                            frameLayout.removeAllViews();
 
                                             //追加読み込みとか
                                             //System.out.println("数 " + adapter.getCount());

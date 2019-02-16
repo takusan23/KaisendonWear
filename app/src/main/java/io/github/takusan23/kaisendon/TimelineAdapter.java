@@ -104,14 +104,14 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
 
 
         //取得？
-        String type = timelineItem.get(0);
+        final String type = timelineItem.get(0);
         final String memo = timelineItem.get(1);
         final String tootID = timelineItem.get(2);
         String tootText = timelineItem.get(3);
         String display_name = timelineItem.get(4);
         String acct = timelineItem.get(5);
         String avatarURL = timelineItem.get(6);
-        String userID = timelineItem.get(7);
+        final String userID = timelineItem.get(7);
         //reblog
         final String reblogToot = timelineItem.get(8);
         String reblogDisplayName = timelineItem.get(9);
@@ -166,6 +166,16 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
             holder.mainLinearLayout.removeView(holder.avatarImageView);
         }
 
+
+        //画像
+        if (pref_setting.getBoolean("image_load", false)) {
+            loadImage(imageURL_1, holder.imageLinearLayout, holder.imageView1);
+            loadImage(imageURL_2, holder.imageLinearLayout, holder.imageView2);
+            loadImage(imageURL_3, holder.imageLinearLayout, holder.imageView3);
+            loadImage(imageURL_4, holder.imageLinearLayout, holder.imageView4);
+        }
+
+
         //メモー通知のアイコン設定
         if (type != null) {
             if (type.contains("notification")) {
@@ -196,7 +206,7 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
             //画像
             Glide.with(getContext()).load(reblogAvatar).into(holder.avatarImageView);
             holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_repeat_black_24dp_2, 0, 0, 0);
-        }else{
+        } else {
             holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
 
@@ -204,21 +214,34 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         holder.linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getContext(), TootInfoActivity.class);
-                //reblog / reblogじゃない
-                if (memo.contains("reblog") && timelineItem.get(10) != null) {
-                    intent.putExtra("id", reblogTootID);
+                //ゆーざー情報・トゥート詳細
+                if (type != null) {
+                    if (memo.contains("userList")) {
+                        //アカウント一覧のときはListを押すことでアカウントページに行けるようにする
+                        Intent intent = new Intent(getContext(), UserActivity.class);
+                        intent.putExtra("id", userID);
+                        getContext().startActivity(intent);
+                    }
                 } else {
-                    intent.putExtra("id", tootID);
+                    Intent intent = new Intent(getContext(), TootInfoActivity.class);
+                    //reblog / reblogじゃない
+                    if (memo.contains("reblog") && timelineItem.get(10) != null) {
+                        intent.putExtra("id", reblogTootID);
+                    } else {
+                        intent.putExtra("id", tootID);
+                    }
+                    getContext().startActivity(intent);
                 }
-                getContext().startActivity(intent);
+
             }
         });
 
         //通知のMention以外の場合はレイアウト消す
+        //あとアカウント一覧
         if (type != null) {
             if (type.contains("notification") && !memo.contains("mention") || memo.contains("userList")) {
                 holder.buttonLinearLayout.removeAllViews();
+                holder.imageLinearLayout.removeAllViews();
             }
         }
 
@@ -255,14 +278,6 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
                 }
             }
         });
-
-        //画像
-        if (pref_setting.getBoolean("image_load", false)) {
-            loadImage(imageURL_1, holder.imageLinearLayout, holder.imageView1);
-            loadImage(imageURL_2, holder.imageLinearLayout, holder.imageView2);
-            loadImage(imageURL_3, holder.imageLinearLayout, holder.imageView3);
-            loadImage(imageURL_4, holder.imageLinearLayout, holder.imageView4);
-        }
 
 
         return view;

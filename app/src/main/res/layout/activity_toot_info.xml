@@ -44,7 +44,6 @@
                 android:id="@+id/tootTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:autoLink="web"
                 android:textSize="10sp" />
 
             <LinearLayout
@@ -66,6 +65,7 @@
 
                 <ImageButton
                     android:id="@+id/TootInfoBoostImageButton"
+                    android:background="@drawable/button_style"
                     android:layout_width="wrap_content"
                     android:layout_height="35dp"
                     android:layout_weight="1"
@@ -73,6 +73,7 @@
 
                 <ImageButton
                     android:id="@+id/TootInfoFavImageButton"
+                    android:background="@drawable/button_style"
                     android:layout_width="wrap_content"
                     android:layout_height="35dp"
                     android:layout_weight="1"

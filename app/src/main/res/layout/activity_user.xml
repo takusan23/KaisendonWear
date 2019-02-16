@@ -46,6 +46,7 @@
                 android:id="@+id/followButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/button_style"
                 android:drawableStart="@drawable/ic_person_add_black_24dp"
                 android:text="@string/follow_button" />
 
@@ -53,8 +54,7 @@
                 android:id="@+id/noteTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textSize="10sp" />
+                android:gravity="center" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -67,6 +67,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:background="@drawable/button_style"
                     android:drawableStart="@drawable/ic_date_range_black_24dp" />
 
                 <Button
@@ -74,6 +75,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:background="@drawable/button_style"
                     android:drawableStart="@drawable/ic_done_black_24dp" />
 
                 <Button
@@ -81,6 +83,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:background="@drawable/button_style"
                     android:drawableStart="@drawable/ic_done_all_black_24dp" />
 
                 <Button
@@ -88,6 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:background="@drawable/button_style"
                     android:drawableStart="@drawable/ic_create_black_24dp" />
             </LinearLayout>
 

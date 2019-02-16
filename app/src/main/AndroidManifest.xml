@@ -28,13 +28,7 @@
 
         <activity
             android:name=".UserListActivity"
-            android:label="@string/title_activity_user_list">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/title_activity_user_list"></activity>
         <activity
             android:name=".UserActivity"
             android:label="@string/title_activity_user" />

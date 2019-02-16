@@ -74,14 +74,12 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
         pref_setting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         //アカウント情報がなかったら取りに行く
-/*
         if (pref_setting.getString("main_token", "").length() == 0 && pref_setting.getString("main_instance", "").length() == 0) {
             Intent intent = new Intent(MainActivity.this, AccountTransportActivity.class);
             startActivity(intent);
             //このActivityを閉じる
             finish();
         }
-*/
 
         //アクセストークン
         accessToken = pref_setting.getString("main_token", "");

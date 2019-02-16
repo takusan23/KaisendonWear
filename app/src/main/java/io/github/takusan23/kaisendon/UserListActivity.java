@@ -4,10 +4,14 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.wearable.activity.WearableActivity;
+import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import io.github.takusan23.kaisendon.Utilities.PrgressBarUtil;
 
 public class UserListActivity extends WearableActivity {
 
@@ -15,6 +19,9 @@ public class UserListActivity extends WearableActivity {
     private SharedPreferences pref_setting;
     ArrayList<TimelineMenuItem> toot_list;
     TimelineAdapter adapter;
+
+    FrameLayout frameLayout;
+    ProgressBar progressBar;
 
     //あかうんと
     private String accessToken = "";
@@ -32,6 +39,10 @@ public class UserListActivity extends WearableActivity {
         pref_setting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         listView = findViewById(R.id.userListView);
+
+        frameLayout = findViewById(R.id.userListFrameLayout);
+        progressBar = new ProgressBar(this);
+        PrgressBarUtil.kaisendonWearProgressBarShow(frameLayout, progressBar);
 
         //アクセストークン
         accessToken = pref_setting.getString("main_token", "");
@@ -54,15 +65,18 @@ public class UserListActivity extends WearableActivity {
         switch (getIntent().getIntExtra("type", 1)) {
             case 1:
                 url = "https://" + instance + "/api/v1/" + "accounts/" + userID + "/statuses" + "?access_token=" + accessToken;
-                loadTimelineAPI.loadTimeline(UserListActivity.this, adapter, listView, url, null);
+                loadTimelineAPI.loadTimeline(UserListActivity.this, adapter, listView, url, null, frameLayout);
+                //frameLayout.removeAllViews();
                 break;
             case 2:
                 url = "https://" + instance + "/api/v1/" + "accounts/" + userID + "/following" + "?access_token=" + accessToken;
-                loadTimelineAPI.loadFollow(UserListActivity.this, adapter, listView, url, null);
+                loadTimelineAPI.loadFollow(UserListActivity.this, adapter, listView, url, frameLayout);
+                //frameLayout.removeAllViews();
                 break;
             case 3:
                 url = "https://" + instance + "/api/v1/" + "accounts/" + userID + "/followers" + "?access_token=" + accessToken;
-                loadTimelineAPI.loadFollow(UserListActivity.this, adapter, listView, url, null);
+                loadTimelineAPI.loadFollow(UserListActivity.this, adapter, listView, url, frameLayout);
+                //frameLayout.removeAllViews();
                 break;
         }
 

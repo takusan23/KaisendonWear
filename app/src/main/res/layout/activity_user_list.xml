@@ -12,7 +12,13 @@
     <ListView
         android:id="@+id/userListView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"></ListView>
 
-    </ListView>
+    <FrameLayout
+        android:id="@+id/userListFrameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/inner_frame_layout_padding"
+        app:boxedEdges="all" />
+
 </android.support.wear.widget.BoxInsetLayout>
