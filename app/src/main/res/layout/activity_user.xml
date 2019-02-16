@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.wear.widget.drawer.WearableDrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,6 +8,16 @@
     android:padding="@dimen/box_inset_layout_padding"
     tools:context=".UserActivity"
     tools:deviceIds="wear">
+
+
+    <android.support.wear.widget.drawer.WearableActionDrawerView
+        android:id="@+id/userInfoMenuActionDrawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80757575"
+        app:actionMenu="@menu/user_info_menu">
+
+    </android.support.wear.widget.drawer.WearableActionDrawerView>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -56,45 +66,25 @@
                 android:layout_height="wrap_content"
                 android:gravity="center" />
 
-            <LinearLayout
+            <Button
+                android:id="@+id/created_at"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:background="@drawable/button_style"
+                android:drawableStart="@drawable/ic_date_range_black_24dp" />
+
+            <LinearLayout
+                android:id="@+id/userInfofieldsLinearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/created_at"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="@drawable/button_style"
-                    android:drawableStart="@drawable/ic_date_range_black_24dp" />
-
-                <Button
-                    android:id="@+id/followCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="@drawable/button_style"
-                    android:drawableStart="@drawable/ic_done_black_24dp" />
-
-                <Button
-                    android:id="@+id/followerCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="@drawable/button_style"
-                    android:drawableStart="@drawable/ic_done_all_black_24dp" />
-
-                <Button
-                    android:id="@+id/tootCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="@drawable/button_style"
-                    android:drawableStart="@drawable/ic_create_black_24dp" />
             </LinearLayout>
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="40dp" />
 
         </LinearLayout>
     </ScrollView>
@@ -106,4 +96,4 @@
         android:padding="@dimen/inner_frame_layout_padding"
         app:boxedEdges="all" />
 
-</android.support.wear.widget.BoxInsetLayout>
+</android.support.wear.widget.drawer.WearableDrawerLayout>

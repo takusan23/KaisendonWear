@@ -27,4 +27,11 @@
     <string name="update">Update</string>
     <string name="image_load">Image Load</string>
     <string name="title_activity_user_list">UserListActivity</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="followed_by">Following</string>
+    <string name="followed_by_not">I am not following</string>
+    <string name="following">following</string>
+    <string name="follow_post">Followed</string>
+    <string name="unfollow_post">Unfollowed</string>
 </resources>

@@ -1,4 +1,4 @@
-package io.github.takusan23.kaisendon;
+package io.github.takusan23.kaisendon.Utilities;
 
 import android.app.Activity;
 import android.text.Html;
@@ -13,6 +13,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import io.github.takusan23.kaisendon.TimelineAdapter;
+import io.github.takusan23.kaisendon.TimelineMenuItem;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -32,6 +34,9 @@ public class loadTimelineAPI {
     private static int userID;
 
     /**
+     * タイムラインを読み込むときに使います。<br>
+     * timeline以外にもユーザーのstatusesにも使えます。
+     *
      * @param activity        UIスレッド・Context用
      * @param timelineAdapter ListViewのAdapter
      * @param listView        ListView
@@ -265,7 +270,8 @@ public class loadTimelineAPI {
     }
 
     /**
-     * フォロー・フォロワーを取得するのに使います
+     * フォロー・フォロワーを取得するのに使います<br>
+     * アクセストークンが必要
      *
      * @param activity        UIスレッド・Context用
      * @param timelineAdapter ListViewのAdapter

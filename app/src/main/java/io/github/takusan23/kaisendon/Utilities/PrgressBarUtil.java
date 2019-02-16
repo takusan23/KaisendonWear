@@ -15,7 +15,10 @@ public class PrgressBarUtil {
      */
 
     /**
-     * くるくるを省略したやつ
+     * くるくるを省略したやつ<br>
+     * FrameLayoutのremoveAllViews<br>
+     * ProgressBarのCenter表示<br>
+     * FrameLayoutに追加を省略している。
      *
      * @param frameLayout レイアウト
      * @param progressBar くるくる

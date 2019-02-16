@@ -25,4 +25,11 @@
     <string name="toot_count">トゥート</string>
     <string name="update">更新</string>
     <string name="image_load">画像表示</string>
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+    <string name="followed_by">フォローされています</string>
+    <string name="followed_by_not">フォローされていません</string>
+    <string name="following">フォロー中</string>
+    <string name="unfollow_post">フォローを解除しました</string>
+    <string name="follow_post">フォローしました</string>
 </resources>

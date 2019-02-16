@@ -7,11 +7,11 @@ import android.support.wearable.activity.WearableActivity;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 
 import io.github.takusan23.kaisendon.Utilities.PrgressBarUtil;
+import io.github.takusan23.kaisendon.Utilities.loadTimelineAPI;
 
 public class UserListActivity extends WearableActivity {
 
@@ -66,17 +66,14 @@ public class UserListActivity extends WearableActivity {
             case 1:
                 url = "https://" + instance + "/api/v1/" + "accounts/" + userID + "/statuses" + "?access_token=" + accessToken;
                 loadTimelineAPI.loadTimeline(UserListActivity.this, adapter, listView, url, null, frameLayout);
-                //frameLayout.removeAllViews();
                 break;
             case 2:
                 url = "https://" + instance + "/api/v1/" + "accounts/" + userID + "/following" + "?access_token=" + accessToken;
                 loadTimelineAPI.loadFollow(UserListActivity.this, adapter, listView, url, frameLayout);
-                //frameLayout.removeAllViews();
                 break;
             case 3:
                 url = "https://" + instance + "/api/v1/" + "accounts/" + userID + "/followers" + "?access_token=" + accessToken;
                 loadTimelineAPI.loadFollow(UserListActivity.this, adapter, listView, url, frameLayout);
-                //frameLayout.removeAllViews();
                 break;
         }
 

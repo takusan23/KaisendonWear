@@ -14,6 +14,7 @@ import android.support.wear.widget.drawer.WearableNavigationDrawerView;
 import android.support.wearable.activity.WearableActivity;
 import android.text.Html;
 import android.view.Gravity;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -148,6 +149,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
 
 
     //タイムラインの読み込み
+
     /**
      * @param maxID 追加読み込み時に利用します。nullを入れると追加読み込み機能は無効になります。
      */
@@ -327,7 +329,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                                             listView.setAdapter(adapter);
                                             listViewLast = false;
                                             if (maxID != null) {
-                                                listView.setSelectionFromTop(position,y);
+                                                listView.setSelectionFromTop(position, y);
                                             }
 
                                             //追加読み込みとか
@@ -395,25 +397,25 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                 startActivity(intent);
                 break;
             case MY_ACCOUNT:
-                Intent accountIntent = new Intent(MainActivity.this,UserActivity.class);
-                accountIntent.putExtra("id",userID);
-                accountIntent.putExtra("my","あなたです！");
+                Intent accountIntent = new Intent(MainActivity.this, UserActivity.class);
+                accountIntent.putExtra("id", userID);
+                accountIntent.putExtra("my", "あなたです！");
                 startActivity(accountIntent);
                 break;
             case R.id.image_load:
                 //メニューのText変更
                 //押したらON/OFFするように
                 SharedPreferences.Editor editor = pref_setting.edit();
-                if (pref_setting.getBoolean("image_load",false)){
+                if (pref_setting.getBoolean("image_load", false)) {
                     //OFFにする
-                    editor.putBoolean("image_load",false);
+                    editor.putBoolean("image_load", false);
                     MenuItem menuItem = mWearableActionDrawer.getMenu().findItem(R.id.image_load);
                     String title = getString(R.string.image_load);
                     menuItem.setTitle("");
                     menuItem.setTitle(title + "\nOFF→ON");
-                }else{
+                } else {
                     //ONにする
-                    editor.putBoolean("image_load",true);
+                    editor.putBoolean("image_load", true);
                     MenuItem menuItem = mWearableActionDrawer.getMenu().findItem(R.id.image_load);
                     String title = getString(R.string.image_load);
                     menuItem.setTitle("");
@@ -519,7 +521,7 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                         @Override
                         public void run() {
                             //自分の垢に移動するメニュー
-                            mWearableActionDrawer.getMenu().add(0,MY_ACCOUNT,0,name).setIcon(R.drawable.ic_person_black_24dp);
+                            mWearableActionDrawer.getMenu().add(0, MY_ACCOUNT, 0, name).setIcon(R.drawable.ic_person_black_24dp);
                         }
                     });
                 } catch (JSONException e) {
@@ -530,14 +532,14 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
     }
 
     //メニューのテキスト変更とか
-    private void loadSetting(){
-        if (pref_setting.getBoolean("image_load",false)){
+    private void loadSetting() {
+        if (pref_setting.getBoolean("image_load", false)) {
             //OFFにする
             MenuItem menuItem = mWearableActionDrawer.getMenu().findItem(R.id.image_load);
             String title = getString(R.string.image_load);
             menuItem.setTitle("");
             menuItem.setTitle(title + "\nON→OFF");
-        }else{
+        } else {
             //ONにする
             MenuItem menuItem = mWearableActionDrawer.getMenu().findItem(R.id.image_load);
             String title = getString(R.string.image_load);

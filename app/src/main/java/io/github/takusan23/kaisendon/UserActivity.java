@@ -5,14 +5,19 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
+import android.net.LinkAddress;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.LinearSmoothScroller;
+import android.support.wear.widget.drawer.WearableActionDrawerView;
 import android.support.wearable.activity.WearableActivity;
+import android.support.wearable.view.drawer.WearableActionDrawer;
 import android.text.Html;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -41,11 +46,14 @@ import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class UserActivity extends WearableActivity {
+public class UserActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener {
 
     private SharedPreferences pref_setting;
     //あかうんと
@@ -53,6 +61,7 @@ public class UserActivity extends WearableActivity {
     private String instance = "";
     //UserID
     private String userID;
+    private String acct;
 
     private ImageView headerImageView;
     private ImageView avatarImageView;
@@ -61,9 +70,7 @@ public class UserActivity extends WearableActivity {
     private Button followButton;
     private ListView listView;
     private Button created_at_TextView;
-    private Button followCount;
-    private Button followerCount;
-    private Button tootCount;
+    private LinearLayout fieldsLinearLayout;
 
     ArrayList<TimelineMenuItem> toot_list;
     TimelineAdapter adapter;
@@ -71,11 +78,24 @@ public class UserActivity extends WearableActivity {
     private FrameLayout frameLayout;
     private ProgressBar progressBar;
 
+    //自分　それ以外
+    private boolean myAccount = false;
+
+    private WearableActionDrawerView mWearableActionDrawer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
+
+        // Bottom Action Drawer
+        mWearableActionDrawer =
+                (WearableActionDrawerView) findViewById(R.id.userInfoMenuActionDrawer);
+        // Peeks action drawer on the bottom.
+        mWearableActionDrawer.getController().peekDrawer();
+        mWearableActionDrawer.setOnMenuItemClickListener(this);
+
 
         //Intentからデータを貰う
         userID = getIntent().getStringExtra("id");
@@ -94,10 +114,8 @@ public class UserActivity extends WearableActivity {
         nameTextView = findViewById(R.id.userNameTextView);
         noteTextView = findViewById(R.id.noteTextView);
         followButton = findViewById(R.id.followButton);
-        followCount = findViewById(R.id.followCount);
-        followerCount = findViewById(R.id.followerCount);
-        tootCount = findViewById(R.id.tootCount);
         created_at_TextView = findViewById(R.id.created_at);
+        fieldsLinearLayout = findViewById(R.id.userInfofieldsLinearLayout);
 
         frameLayout = findViewById(R.id.UserFrameLayout);
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -109,45 +127,13 @@ public class UserActivity extends WearableActivity {
         loadAccount();
 
         //自分
-        if (my != null){
+        if (my != null) {
             followButton.setText(my);
+        } else {
+            //自分以外の場合、フォロー関係等を取りに行く
+            accountRelationships();
         }
 
-        //TL読み込み用
-        toot_list = new ArrayList<>();
-        adapter = new TimelineAdapter(this, R.layout.timeline_layout, toot_list);
-
-        //ボタンクリック処理
-        tootCount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toot
-                Intent intent = new Intent(UserActivity.this,UserListActivity.class);
-                intent.putExtra("id",userID);
-                intent.putExtra("type",1);
-                startActivity(intent);
-            }
-        });
-        followCount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toot
-                Intent intent = new Intent(UserActivity.this,UserListActivity.class);
-                intent.putExtra("id",userID);
-                intent.putExtra("type",2);
-                startActivity(intent);
-            }
-        });
-        followerCount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toot
-                Intent intent = new Intent(UserActivity.this,UserListActivity.class);
-                intent.putExtra("id",userID);
-                intent.putExtra("type",3);
-                startActivity(intent);
-            }
-        });
 
         // Enables Always-on
         setAmbientEnabled();
@@ -179,7 +165,7 @@ public class UserActivity extends WearableActivity {
                 try {
                     JSONObject jsonObject = new JSONObject(response_string);
                     final String display_name = jsonObject.getString("display_name");
-                    final String acct = jsonObject.getString("acct");
+                    acct = jsonObject.getString("acct");
                     final String header = jsonObject.getString("header");
                     final String avatar = jsonObject.getString("avatar");
                     final String note = jsonObject.getString("note");
@@ -187,6 +173,42 @@ public class UserActivity extends WearableActivity {
                     final String follower = jsonObject.getString("followers_count");
                     final String statuses_count = jsonObject.getString("statuses_count");
                     final String created_at = timeFormatChange(jsonObject.getString("created_at"), "9");
+
+                    //補足情報
+                    //要素があるか確認
+                    if (!jsonObject.getJSONArray("fields").isNull(0)) {
+                        JSONArray fields = jsonObject.getJSONArray("fields");
+                        for (int i = 0; i < fields.length(); i++) {
+                            final String name = fields.getJSONObject(i).getString("name");
+                            final String value = fields.getJSONObject(i).getString("value");
+                            //レイアウトに入れる
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    LinearLayout linearLayout = new LinearLayout(UserActivity.this);
+                                    ViewGroup.LayoutParams linearlayout_layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                    linearLayout.setLayoutParams(linearlayout_layoutParams);
+                                    linearLayout.setOrientation(LinearLayout.VERTICAL);
+                                    ViewGroup.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                    ((LinearLayout.LayoutParams) layoutParams).gravity = Gravity.CENTER;
+
+                                    TextView name_textView = new TextView(UserActivity.this);
+                                    TextView value_textView = new TextView(UserActivity.this);
+                                    name_textView.setLayoutParams(layoutParams);
+                                    value_textView.setLayoutParams(layoutParams);
+
+                                    name_textView.setText(name);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        value_textView.setText(Html.fromHtml(value, Html.FROM_HTML_MODE_COMPACT));
+                                    }
+                                    linearLayout.addView(name_textView);
+                                    linearLayout.addView(value_textView);
+                                    linearLayout.setBackground(getDrawable(R.drawable.button_style));
+                                    fieldsLinearLayout.addView(linearLayout);
+                                }
+                            });
+                        }
+                    }
 
                     //UI Thread
                     runOnUiThread(new Runnable() {
@@ -199,9 +221,11 @@ public class UserActivity extends WearableActivity {
                                 noteTextView.setText(Html.fromHtml(note, Html.FROM_HTML_MODE_COMPACT));
                             }
                             //数
-                            followCount.setText(getString(R.string.follow_count) + " : " + follow);
-                            followerCount.setText(getString(R.string.follower_count) + " : " + follower);
-                            tootCount.setText(getString(R.string.toot_count) + " : " + statuses_count);
+                            //フォローとか書くよ
+                            menuAddText(R.id.menu_follow, "\n" + follow);
+                            menuAddText(R.id.menu_follower, "\n" + follower);
+                            menuAddText(R.id.menu_status, "\n" + statuses_count);
+
                             created_at_TextView.setText(getString(R.string.created_at) + " : " + created_at);
 
                             //画像
@@ -221,9 +245,10 @@ public class UserActivity extends WearableActivity {
         });
     }
 
-    //時間変換
 
     /**
+     * 時間変換
+     *
      * @param time    created_atの値
      * @param addTime 時間調整（例：９）
      */
@@ -248,26 +273,168 @@ public class UserActivity extends WearableActivity {
     }
 
 
-    //タイムラインの読み込み
-    private void loadTL() {
-        //くるくる（語彙力）をだす
-        frameLayout.removeAllViews();
-        frameLayout.addView(progressBar);
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        final int itemId = item.getItemId();
+        Intent intent = new Intent(UserActivity.this, UserListActivity.class);
+        switch (itemId) {
+            case R.id.menu_status:
+                //Toot
+                intent.putExtra("id", userID);
+                intent.putExtra("type", 1);
+                startActivity(intent);
+                break;
+            case R.id.menu_follow:
+                //Follow
+                intent.putExtra("id", userID);
+                intent.putExtra("type", 2);
+                startActivity(intent);
+                break;
+            case R.id.menu_follower:
+                //Follower
+                intent.putExtra("id", userID);
+                intent.putExtra("type", 3);
+                startActivity(intent);
+                break;
+        }
+        mWearableActionDrawer.getController().peekDrawer();
+        return false;
+    }
 
-        String url = "https://" + instance + "/api/v1/accounts/" + userID + "/statuses?access_token=" + accessToken;
-        //maxIDある？
+    /**
+     * メニューにテキストを追加する
+     *
+     * @param id   メニューのID
+     * @param text 追加したい文
+     */
+    private void menuAddText(int id, String text) {
+        MenuItem menuItem = mWearableActionDrawer.getMenu().findItem(id);
+        //一時保存
+        String temp = menuItem.getTitle().toString();
+        //入れる
+        menuItem.setTitle(temp + text);
+    }
+
+    //フォロー、フォロー中、ふぉろば確認
+    private void accountRelationships() {
+        String url = "https://" + instance + "/api/v1/accounts/relationships/?stream=user&access_token=" + accessToken;
         //パラメータを設定
-        HttpUrl.Builder max_id_builder = HttpUrl.parse(url).newBuilder();
-        String max_id_final_url = max_id_builder.build().toString();
+        HttpUrl.Builder builder = HttpUrl.parse(url).newBuilder();
+        builder.addQueryParameter("id", String.valueOf(userID));
+        String final_url = builder.build().toString();
+
         //作成
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(max_id_final_url)
+        Request request = new Request.Builder()
+                .url(final_url)
                 .get()
                 .build();
 
         //GETリクエスト
-        OkHttpClient client_1 = new OkHttpClient();
-        client_1.newCall(request).enqueue(new Callback() {
+        OkHttpClient client = new OkHttpClient();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //入れる。なぜか配列になってる
+                try {
+                    JSONArray jsonArray = new JSONArray(response.body().string());
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    final boolean followed_by = jsonObject.getBoolean("followed_by");
+                    //↓これ使うのかな・・？
+                    boolean blocking = jsonObject.getBoolean("blocking");
+                    boolean muting = jsonObject.getBoolean("muting");
+                    final boolean following = jsonObject.getBoolean("following");
+                    final String followed_by_string;
+                    final String following_string;
+                    //ふぉろば
+                    if (followed_by) {
+                        followed_by_string = getString(R.string.followed_by);
+                    } else {
+                        followed_by_string = getString(R.string.followed_by_not);
+                    }
+                    //フォローしているか
+                    if (following) {
+                        following_string = getString(R.string.following);
+                    } else {
+                        following_string = getString(R.string.follow_button);
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            followButton.setText(following_string + "\n" + followed_by_string);
+                            //アイコンを変える
+                            //文字色も変える
+                            if (following || followed_by) {
+                                followButton.setTextColor(Color.parseColor("#87CEFA"));
+                                Drawable follow_icon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_done_black_24dp, null);
+                                if (followed_by) {
+                                    follow_icon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_done_all_black_24dp, null);
+                                }
+                                follow_icon.setTint(Color.parseColor("#87CEFA"));
+                                followButton.setCompoundDrawablesRelativeWithIntrinsicBounds(follow_icon, null, null, null);
+                            }
+
+                            //フォローする
+                            followButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    //リモートフォローか分ける
+                                    if (acct.contains("@")) {
+                                        //リモートフォロー
+                                        //ふぉろー
+                                        if (!following) {
+                                            remoteFollow(getString(R.string.follow_post));
+                                        } else {
+                                            //フォロー解除
+                                            follow("unfollow", getString(R.string.unfollow_post));
+                                        }
+                                    } else {
+                                        //ふぉろー
+                                        if (!following) {
+                                            follow("follow", getString(R.string.follow_post));
+                                        } else {
+                                            //フォロー解除
+                                            follow("unfollow", getString(R.string.unfollow_post));
+                                        }
+                                    }
+                                }
+                            });
+
+                        }
+                    });
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
+
+    /**
+     * フォローする（同じインスタンスの場合）
+     *
+     * @param followUrl "follow"または"unfollow"
+     * @param message   POST終わったときに表示するメッセージ
+     */
+    private void follow(String followUrl, final String message) {
+        String url = "https://" + instance + "/api/v1/accounts/" + userID + "/" + followUrl + "?access_token=" + accessToken;
+        //ぱらめーたー
+        RequestBody requestBody = new FormBody.Builder()
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
+
+        //POST
+        OkHttpClient client = new OkHttpClient();
+        client.newCall(request).enqueue(new Callback() {
 
             @Override
             public void onFailure(Call call, IOException e) {
@@ -276,157 +443,50 @@ public class UserActivity extends WearableActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String response_string = response.body().string();
-                try {
-                    final JSONArray jsonArray = new JSONArray(response_string);
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                            final String display = jsonArray.getJSONObject(i).getJSONObject("account").getString("display_name");
-                            final String acct = jsonArray.getJSONObject(i).getJSONObject("account").getString("acct");
-                            final String avatar = jsonArray.getJSONObject(i).getJSONObject("account").getString("avatar");
-                            String toot_id = jsonArray.getJSONObject(i).getString("id");
-                            final String accountID = jsonArray.getJSONObject(i).getJSONObject("account").getString("id");
-
-                            //fav/reblog済み確認
-                            String favourited = null;
-                            String reblogged = null;
-
-                            String reblogToot = null;
-                            String reblogDisplayName = null;
-                            String reblogName = null;
-                            String reblogAvatar = null;
-                            String reblogAccountID = null;
-                            String reblogTootID = null;
-
-                            //画像
-                            String imageURL_1 = null;
-                            String imageURL_2 = null;
-                            String imageURL_3 = null;
-                            String imageURL_4 = null;
-
-                            //reblogとか
-                            String type = "";
-                            if (!jsonArray.getJSONObject(i).isNull("reblog")) {
-                                type = "reblog";
-                                JSONObject reblogJsonObject = jsonArray.getJSONObject(i).getJSONObject("reblog");
-                                JSONObject reblogAccountJsonObject = reblogJsonObject.getJSONObject("account");
-                                reblogToot = Html.fromHtml(reblogJsonObject.getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
-                                reblogDisplayName = reblogAccountJsonObject.getString("display_name");
-                                reblogName = reblogAccountJsonObject.getString("acct");
-                                reblogAvatar = reblogAccountJsonObject.getString("avatar");
-                                reblogAccountID = reblogAccountJsonObject.getString("id");
-                                reblogTootID = reblogJsonObject.getString("id");
-                            }
-
-
-                            //通知とか
-                            String toot = "";
-                            String memo = null;
-                            if (jsonArray.getJSONObject(i).has("content")) {
-                                //通知以外
-                                toot = Html.fromHtml(jsonArray.getJSONObject(i).getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
-                                favourited = jsonArray.getJSONObject(i).getString("favourited");
-                                reblogged = jsonArray.getJSONObject(i).getString("reblogged");
-                                //画像表示
-                                JSONArray media_array = jsonArray.getJSONObject(i).getJSONArray("media_attachments");
-                                if (!media_array.isNull(0)) {
-                                    imageURL_1 = media_array.getJSONObject(0).getString("url");
-                                }
-                                if (!media_array.isNull(1)) {
-                                    imageURL_2 = media_array.getJSONObject(1).getString("url");
-                                }
-                                if (!media_array.isNull(2)) {
-                                    imageURL_3 = media_array.getJSONObject(2).getString("url");
-                                }
-                                if (!media_array.isNull(3)) {
-                                    imageURL_4 = media_array.getJSONObject(3).getString("url");
-                                }
-
-                            } else {
-                                //通知
-                                memo = "notification";
-                                type = jsonArray.getJSONObject(i).getString("type");
-                                toot_id = jsonArray.getJSONObject(i).getJSONObject("status").getString("id");
-                                toot = Html.fromHtml(jsonArray.getJSONObject(i).getJSONObject("status").getString("content"), Html.FROM_HTML_MODE_COMPACT).toString();
-                                //画像表示
-                                JSONArray media_array = jsonArray.getJSONObject(i).getJSONObject("status").getJSONArray("media_attachments");
-                                if (!media_array.isNull(0)) {
-                                    imageURL_1 = media_array.getJSONObject(0).getString("url");
-                                }
-                                if (!media_array.isNull(1)) {
-                                    imageURL_2 = media_array.getJSONObject(1).getString("url");
-                                }
-                                if (!media_array.isNull(2)) {
-                                    imageURL_3 = media_array.getJSONObject(2).getString("url");
-                                }
-                                if (!media_array.isNull(3)) {
-                                    imageURL_4 = media_array.getJSONObject(3).getString("url");
-                                }
-                            }
-                            //TextView
-                            final String finalToot = toot;
-                            final String finalType = type;
-                            final String finalReblogToot = reblogToot;
-                            final String finalReblogDisplayName = reblogDisplayName;
-                            final String finalReblogName = reblogName;
-                            final String finalReblogAvatar = reblogAvatar;
-                            final String finalReblogAccountID = reblogAccountID;
-                            final String finalReblogTootID = reblogTootID;
-                            final String finalToot_id = toot_id;
-                            final String finalMemo = memo;
-                            final String finalFavourited = favourited;
-                            final String finalReblogged = reblogged;
-                            final String finalImageURL_ = imageURL_1;
-                            final String finalImageURL_1 = imageURL_2;
-                            final String finalImageURL_2 = imageURL_3;
-                            final String finalImageURL_3 = imageURL_4;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    final ArrayList<String> arrayList = new ArrayList<>();
-                                    //追加
-                                    //配列用意
-                                    //通知と分ける
-                                    arrayList.add(finalMemo);
-                                    arrayList.add(finalType);
-                                    arrayList.add(finalToot_id);
-                                    arrayList.add(finalToot);
-                                    arrayList.add(display);
-                                    arrayList.add(acct);
-                                    arrayList.add(avatar);
-                                    arrayList.add(accountID);
-                                    arrayList.add(finalReblogToot);
-                                    arrayList.add(finalReblogDisplayName);
-                                    arrayList.add(finalReblogName);
-                                    arrayList.add(finalReblogAvatar);
-                                    arrayList.add(finalReblogAccountID);
-                                    arrayList.add(finalReblogTootID);
-                                    arrayList.add(finalFavourited);
-                                    arrayList.add(finalReblogged);
-                                    arrayList.add(finalImageURL_);
-                                    arrayList.add(finalImageURL_1);
-                                    arrayList.add(finalImageURL_2);
-                                    arrayList.add(finalImageURL_3);
-
-                                    final TimelineMenuItem timelineMenuItem = new TimelineMenuItem(arrayList);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            adapter.add(timelineMenuItem);
-                                            adapter.notifyDataSetChanged();
-                                            listView.setAdapter(adapter);
-                                        }
-                                    });
-                                    frameLayout.removeAllViews();
-                                }
-                            });
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                //反応をわかりやすく
+                Intent animation = new Intent(UserActivity.this, android.support.wearable.activity.ConfirmationActivity.class);
+                animation.putExtra(android.support.wearable.activity.ConfirmationActivity.EXTRA_ANIMATION_TYPE, android.support.wearable.activity.ConfirmationActivity.SUCCESS_ANIMATION);
+                animation.putExtra(android.support.wearable.activity.ConfirmationActivity.EXTRA_MESSAGE, message);
+                startActivity(animation);
             }
         });
-
     }
+
+    /**
+     * リモートフォロー（違うインスタンスでのフォロー）
+     *
+     * @param message POST終わったときに表示するメッセージ
+     */
+    private void remoteFollow(final String message) {
+        String url = "https://" + instance + "/api/v1/follows?access_token=" + accessToken;
+        //ぱらめーたー
+        RequestBody requestBody = new FormBody.Builder()
+                .add("uri", acct)
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
+
+        //POST
+        OkHttpClient client = new OkHttpClient();
+        client.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //反応をわかりやすく
+                Intent animation = new Intent(UserActivity.this, android.support.wearable.activity.ConfirmationActivity.class);
+                animation.putExtra(android.support.wearable.activity.ConfirmationActivity.EXTRA_ANIMATION_TYPE, android.support.wearable.activity.ConfirmationActivity.SUCCESS_ANIMATION);
+                animation.putExtra(android.support.wearable.activity.ConfirmationActivity.EXTRA_MESSAGE, message);
+                startActivity(animation);
+            }
+        });
+    }
+
+
 }
