@@ -1,0 +1,6 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/tootShortcutSetting"
+        android:icon="@drawable/ic_settings_black_24dp"
+        android:title="@string/tootShortcut_setting"></item>
+</menu>

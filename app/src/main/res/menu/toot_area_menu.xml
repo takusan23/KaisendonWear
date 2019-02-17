@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/toot_area_public"
+        android:icon="@drawable/ic_public_black_24dp"
+        android:title="@string/visibility_public"></item>
+    <item
+        android:id="@+id/toot_area_local"
+        android:icon="@drawable/ic_lock_open_black_24dp"
+        android:title="@string/visibility_private"></item>
+    <item
+        android:id="@+id/toot_area_unlisted"
+        android:icon="@drawable/ic_done_all_black_24dp"
+        android:title="@string/visibility_unlisted"></item>
+    <item
+        android:id="@+id/toot_area_direct"
+        android:icon="@drawable/ic_assignment_ind_black_24dp"
+        android:title="@string/visibility_direct"></item>
+</menu>

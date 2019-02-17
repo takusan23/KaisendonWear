@@ -196,25 +196,35 @@ public class TootInfoActivity extends WearableActivity {
                             imageURL_4 = media_array.getJSONObject(3).getString("url");
                         }
 
+                        //クライアント
+                        String client_name = null;
+
+                        //同じインスタンス以外ではnullになるのでチェック
+                        if (!jsonObject.getJSONObject("application").isNull("name")) {
+                            client_name = jsonObject.getJSONObject("application").getString("name");
+                        }
+
+
                         final String finalImageURL_ = imageURL_1;
                         final String finalImageURL_1 = imageURL_2;
                         final String finalImageURL_2 = imageURL_3;
                         final String finalImageURL_3 = imageURL_4;
+                        final String finalClient_name = client_name;
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 //UI
                                 accountTextView.setText(display + "\n" + acct);
                                 tootTextView.setText(toot);
-                                timeTextView.setText(time);
+                                timeTextView.setText(getString(R.string.client) + " : " + finalClient_name + "\n" + time);
                                 //エミュレーターの場合は時間をしっかり合わせないと動かないよ
                                 Glide.with(TootInfoActivity.this).load(avatar).into(accountImageView);
 
                                 //画像読み込み
-                                loadImage(finalImageURL_,new ImageView(TootInfoActivity.this));
-                                loadImage(finalImageURL_1,new ImageView(TootInfoActivity.this));
-                                loadImage(finalImageURL_2,new ImageView(TootInfoActivity.this));
-                                loadImage(finalImageURL_3,new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_, new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_1, new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_2, new ImageView(TootInfoActivity.this));
+                                loadImage(finalImageURL_3, new ImageView(TootInfoActivity.this));
 
                                 if (Boolean.valueOf(favourited_string)) {
                                     favourited = true;
@@ -233,8 +243,8 @@ public class TootInfoActivity extends WearableActivity {
                                 accountLinearLayout.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        Intent intent = new Intent(TootInfoActivity.this,UserActivity.class);
-                                        intent.putExtra("id",userID);
+                                        Intent intent = new Intent(TootInfoActivity.this, UserActivity.class);
+                                        intent.putExtra("id", userID);
                                         startActivity(intent);
                                     }
                                 });
@@ -299,6 +309,7 @@ public class TootInfoActivity extends WearableActivity {
     }
 
     //時間変換
+
     /**
      * @param time    created_atの値
      * @param addTime 時間調整（例：９）

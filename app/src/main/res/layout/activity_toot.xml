@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.wear.widget.drawer.WearableDrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,9 +9,17 @@
     tools:context=".TootActivity"
     tools:deviceIds="wear">
 
+    <android.support.wear.widget.drawer.WearableActionDrawerView
+        android:id="@+id/tootMenuActionDrawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:actionMenu="@menu/toot_shortcut"
+        android:background="#80757575"></android.support.wear.widget.drawer.WearableActionDrawerView>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center"
         android:orientation="vertical"
         android:padding="@dimen/inner_frame_layout_padding"
         app:boxedEdges="all">
@@ -24,12 +32,20 @@
             android:hint="@string/imananishiteru"
             android:inputType="textPersonName" />
 
+        <Button
+            android:id="@+id/postAreaImageButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_style"
+            android:drawableStart="@drawable/ic_public_black_24dp"
+            android:text="@string/visibility_public" />
+
         <android.support.wear.widget.CircularProgressLayout
             android:id="@+id/circularProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="4dp"
             android:layout_gravity="center"
+            android:padding="4dp"
             app:colorSchemeColors="@android:color/holo_blue_bright"
             app:strokeWidth="4dp">
 
@@ -43,4 +59,6 @@
         </android.support.wear.widget.CircularProgressLayout>
 
     </LinearLayout>
-</android.support.wear.widget.BoxInsetLayout>
+
+
+</android.support.wear.widget.drawer.WearableDrawerLayout>

@@ -176,6 +176,19 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
         }
 
 
+        if (memo.contains("reblog")) {
+            //BT内容を
+            //名前
+            holder.nameTextView.setText(reblogDisplayName + " @" + reblogName + "\n" + getContext().getString(R.string.reblog) + " : " + display_name + " @" + acct + notificationType);
+            //本文
+            holder.tootTextView.setText(reblogToot);
+            //画像
+            Glide.with(getContext()).load(reblogAvatar).into(holder.avatarImageView);
+            holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_repeat_black_24dp_2, 0, 0, 0);
+        } else {
+            holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        }
+
         //メモー通知のアイコン設定
         if (type != null) {
             if (type.contains("notification")) {
@@ -194,20 +207,6 @@ public class TimelineAdapter extends ArrayAdapter<TimelineMenuItem> {
                         break;
                 }
             }
-        }
-
-
-        if (memo.contains("reblog")) {
-            //BT内容を
-            //名前
-            holder.nameTextView.setText(reblogDisplayName + " @" + reblogName + "\n" + getContext().getString(R.string.reblog) + " : " + display_name + " @" + acct + notificationType);
-            //本文
-            holder.tootTextView.setText(reblogToot);
-            //画像
-            Glide.with(getContext()).load(reblogAvatar).into(holder.avatarImageView);
-            holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_repeat_black_24dp_2, 0, 0, 0);
-        } else {
-            holder.nameTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
 
         //Toot本文クリックしたら詳細画面へ飛ばす

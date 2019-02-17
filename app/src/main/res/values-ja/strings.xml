@@ -32,4 +32,14 @@
     <string name="following">フォロー中</string>
     <string name="unfollow_post">フォローを解除しました</string>
     <string name="follow_post">フォローしました</string>
+    <string name="visibility_public">公開（公開TLに投稿）</string>
+    <string name="visibility_private">フォロワー限定</string>
+    <string name="visibility_unlisted">未収載（公開TLで公開しない）</string>
+    <string name="visibility_direct">ダイレクト</string>
+    <string name="client">クライアント</string>
+    <string name="tootShortcut_setting">トゥートショートカットの設定</string>
+    <string name="tootshortcut_message">Android版かいせんどんからの転送を利用できます。</string>
+    <string name="tootshortcut_edittext_hint">もしくはここに入力</string>
+    <string name="add">追加</string>
+    <string name="toot_shortcut_delete_message">削除する場合は以下から選んでください。</string>
 </resources>

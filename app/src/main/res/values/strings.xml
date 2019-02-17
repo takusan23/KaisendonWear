@@ -34,4 +34,15 @@
     <string name="following">following</string>
     <string name="follow_post">Followed</string>
     <string name="unfollow_post">Unfollowed</string>
+    <string name="visibility_public">Public</string>
+    <string name="visibility_private">Private</string>
+    <string name="visibility_unlisted">Unlisted</string>
+    <string name="visibility_direct">Direct</string>
+    <string name="client">Client</string>
+    <string name="tootShortcut_setting">TootShortcut Setting</string>
+    <string name="title_activity_toot_shortcut_setting">TootShortcutSettingActivity</string>
+    <string name="tootshortcut_message">You can use transfer from Kaisendon for Android.</string>
+    <string name="tootshortcut_edittext_hint">Or enter here</string>
+    <string name="add">Add</string>
+    <string name="toot_shortcut_delete_message">To delete it please choose from the following.</string>
 </resources>

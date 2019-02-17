@@ -27,8 +27,12 @@
             android:value="true" />
 
         <activity
+            android:name=".TootShortcutSettingActivity"
+            android:label="@string/title_activity_toot_shortcut_setting"
+            android:theme="@style/Theme.AppCompat"></activity>
+        <activity
             android:name=".UserListActivity"
-            android:label="@string/title_activity_user_list"></activity>
+            android:label="@string/title_activity_user_list" />
         <activity
             android:name=".UserActivity"
             android:label="@string/title_activity_user" />
@@ -39,7 +43,8 @@
         <activity
             android:name=".TootActivity"
             android:icon="@drawable/ic_create_black_24dp"
-            android:label="@string/toot">
+            android:label="@string/toot"
+            android:theme="@style/Theme.AppCompat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

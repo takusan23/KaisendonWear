@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.wear.widget.drawer.WearableDrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:padding="@dimen/box_inset_layout_padding"
+    tools:context=".TootShortcutSettingActivity"
+    tools:deviceIds="wear">
+
+    <android.support.wear.widget.drawer.WearableActionDrawerView
+        android:id="@+id/toot_shortcut_MenuActionDrawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80757575"
+        app:actionMenu="@menu/toot_shortcut_setting"></android.support.wear.widget.drawer.WearableActionDrawerView>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:boxedEdges="all">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/inner_frame_layout_padding"
+            app:boxedEdges="all">
+
+
+            <TextView
+                android:id="@+id/toot_shortcut_message_textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="" />
+
+            <EditText
+                android:id="@+id/toot_shortcut_editText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/tootshortcut_edittext_hint"
+                android:inputType="textPersonName" />
+
+            <Button
+                android:id="@+id/toot_shortcut_area_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/button_style"
+                android:drawableStart="@drawable/ic_public_black_24dp"
+                android:text="@string/visibility_public" />
+
+            <Button
+                android:id="@+id/toot_shortcut_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/button_style"
+                android:text="@string/add" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</android.support.wear.widget.drawer.WearableDrawerLayout>
