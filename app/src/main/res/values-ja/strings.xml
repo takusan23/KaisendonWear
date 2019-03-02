@@ -42,4 +42,5 @@
     <string name="tootshortcut_edittext_hint">もしくはここに入力</string>
     <string name="add">追加</string>
     <string name="toot_shortcut_delete_message">削除する場合は以下から選んでください。</string>
+    <string name="toot_shortcut_android_send">トゥートショートカットをAndroid端末に転送</string>
 </resources>

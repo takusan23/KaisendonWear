@@ -38,6 +38,13 @@
                 android:gravity="center"
                 android:text="" />
 
+            <Button
+                android:id="@+id/toot_shortcut_send_button"
+                android:background="@drawable/button_style"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/toot_shortcut_android_send" />
+
             <EditText
                 android:id="@+id/toot_shortcut_editText"
                 android:layout_width="match_parent"
@@ -62,6 +69,10 @@
                 android:layout_gravity="center"
                 android:background="@drawable/button_style"
                 android:text="@string/add" />
+            
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
 
         </LinearLayout>
     </ScrollView>

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.view.menu.MenuPopupHelper;
 import android.support.wear.widget.drawer.WearableActionDrawerView;
@@ -17,18 +18,28 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.MessageClient;
+import com.google.android.gms.wearable.MessageEvent;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.Wearable;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class TootShortcutSettingActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener, MenuBuilder.Callback {
+public class TootShortcutSettingActivity extends WearableActivity implements MenuItem.OnMenuItemClickListener, MenuBuilder.Callback, MessageClient.OnMessageReceivedListener {
     private SharedPreferences pref_setting;
 
     private TextView textView;
     private EditText editText;
     private Button button;
     private Button areaButton;
+    private Button sendButton;
     //削除リスト
     private WearableActionDrawerView mWearableActionDrawer;
 
@@ -51,6 +62,7 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
         editText = findViewById(R.id.toot_shortcut_editText);
         button = findViewById(R.id.toot_shortcut_button);
         areaButton = findViewById(R.id.toot_shortcut_area_button);
+        sendButton = findViewById(R.id.toot_shortcut_send_button);
 
         // Bottom Action Drawer
         mWearableActionDrawer =
@@ -101,15 +113,84 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
             }
         });
 
+        //Android端末と連携
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (stringArrayList.size() != 0) {
+                    //forで回す
+                    for (int i = 0; i < stringArrayList.size(); i++) {
+                        sendAndroidDeviceText("/toot_text", stringArrayList.get(i));
+                        sendAndroidDeviceText("/toot_icon", iconArrayList.get(i));
+                    }
+                    sendAndroidDeviceText("/finish", "finish");
+                }
+            }
+        });
 
         // Enables Always-on
         setAmbientEnabled();
     }
 
+    //Android端末からリストを受け取る
+    //onPauseとかにちゃんと書かないと動かないよ
+    @Override
+    public void onMessageReceived(@NonNull MessageEvent messageEvent) {
+
+
+        //最初の通信時は消す？
+        if (messageEvent.getPath().contains("/clear")) {
+            stringArrayList.clear();
+            iconArrayList.clear();
+            Menu menu = mWearableActionDrawer.getMenu();
+            menu.clear();
+        }
+
+        //Text
+        if (messageEvent.getPath().contains("/toot_text")) {
+            stringArrayList.add(new String(messageEvent.getData()));
+        }
+        //Icon
+        if (messageEvent.getPath().contains("/toot_icon")) {
+            iconArrayList.add(new String(messageEvent.getData()));
+        }
+        //終わり
+        if (messageEvent.getPath().contains("/finish")) {
+            //Menuに入れる
+            if (stringArrayList.size() == iconArrayList.size()) {
+                Menu menu = mWearableActionDrawer.getMenu();
+                for (int i = 0; i < stringArrayList.size(); i++) {
+                    //こいつら重要！！！！
+                    menu.clear();
+                    getMenuInflater().inflate(R.menu.toot_shortcut_setting, menu);
+                    menu.add(0, i, 0, stringArrayList.get(i)).setIcon(R.drawable.ic_delete_black_24dp);
+                }
+                //保存
+                arrayListToStringAndSave();
+                //画面を戻す
+                finish();
+            }
+
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Wearable.getMessageClient(this).addListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Wearable.getMessageClient(this).removeListener(this);
+    }
+
+
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         //削除
-        if (item.getTitle().toString().contains(getString(R.string.toot_shortcut_delete_message))){
+        if (item.getTitle().toString().contains(getString(R.string.toot_shortcut_delete_message))) {
             stringArrayList.clear();
             iconArrayList.clear();
             //String変換And保存
@@ -117,18 +198,18 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
             //再読込
             stringToArrayList();
 
-        }else{
+        } else {
             //Textの削除はItemの本文から。
             //Iconの削除はindexOfで上から何個目かを図って削除
             int position = stringArrayList.indexOf(item.getTitle().toString());
             //なかったら-1
-            if (position != -1){
+            if (position != -1) {
                 //削除
                 stringArrayList.remove(position);
                 iconArrayList.remove(position);
                 Menu menu = mWearableActionDrawer.getMenu();
                 menu.clear();
-                getMenuInflater().inflate(R.menu.toot_shortcut_setting,menu);
+                getMenuInflater().inflate(R.menu.toot_shortcut_setting, menu);
                 //String変換And保存
                 arrayListToStringAndSave();
                 //再読込
@@ -147,7 +228,7 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
         //こいつら重要！！！！
         Menu menu = mWearableActionDrawer.getMenu();
         menu.clear();
-        getMenuInflater().inflate(R.menu.toot_shortcut_setting,menu);
+        getMenuInflater().inflate(R.menu.toot_shortcut_setting, menu);
         stringArrayList.clear();
         iconArrayList.clear();
 
@@ -228,4 +309,33 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
     public void onMenuModeChange(MenuBuilder menuBuilder) {
 
     }
+
+    private void sendAndroidDeviceText(final String name, final String message) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //Node(接続先？)検索
+                Task<List<Node>> nodeListTask =
+                        Wearable.getNodeClient(TootShortcutSettingActivity.this).getConnectedNodes();
+                try {
+                    List<Node> nodes = Tasks.await(nodeListTask);
+                    for (Node node : nodes) {
+                        //sendMessage var1 は名前
+                        //sendMessage var2 はメッセージ
+                        Task<Integer> sendMessageTask =
+                                Wearable.getMessageClient(TootShortcutSettingActivity.this).sendMessage(node.getId(), name, message.getBytes());
+
+                        Integer result = Tasks.await(sendMessageTask);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }).start();
+    }
+
+
 }
