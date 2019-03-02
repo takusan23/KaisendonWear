@@ -12,14 +12,18 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.github.takusan23.kaisendon.TimelineAdapter;
 import io.github.takusan23.kaisendon.TimelineMenuItem;
+import io.github.takusan23.kaisendon.UserListActivity;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+import okhttp3.internal.http2.Header;
 
 public class loadTimelineAPI {
 
@@ -72,6 +76,9 @@ public class loadTimelineAPI {
             public void onResponse(Call call, Response response) throws IOException {
                 String response_string = response.body().string();
                 try {
+                    //追加読み込み用リンクをヘッダーから持ってくる
+                    final String header_url = response.headers().get("link");
+
                     final JSONArray jsonArray = new JSONArray(response_string);
                     for (int i = 0; i < jsonArray.length(); i++) {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -231,25 +238,33 @@ public class loadTimelineAPI {
                                                 public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                                                     //これ最後だと無限に呼び出されるので最後一度だけ呼ばれるようにする
                                                     if (firstVisibleItem + visibleItemCount == totalItemCount && !last) {
+                                                        //２回呼ばないようにする
+                                                        last = true;
                                                         if (timelineAdapter.getCount() >= 30) {
-                                                            //Toast.makeText(MainActivity.this, "最後だよ", Toast.LENGTH_SHORT).show();
-                                                            last = true;
-                                                            //追加読み込み開始
-                                                            try {
-                                                                //最後（39個目）のToot IDを取得する
-                                                                //通知は30件までしか取れないので条件分岐
-                                                                if (finalMemo != null) {
-                                                                    if (finalMemo.contains("notification")) {
-                                                                        lastID = jsonArray.getJSONObject(29).getString("id");
-                                                                    }
-                                                                } else {
-                                                                    lastID = jsonArray.getJSONObject(39).getString("id");
-                                                                }
-                                                                loadTimeline(activity, timelineAdapter, listView, url, maxID, frameLayout);
-                                                            } catch (JSONException e) {
-                                                                e.printStackTrace();
+                                                            //１個以上で動くように
+                                                            //URLを正規表現で取る？
+                                                            String url = null;
+                                                            ArrayList<String> url_list = new ArrayList<>();
+                                                            //正規表現実行
+                                                            //判定するパターンを生成
+                                                            Pattern p = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+");
+                                                            Matcher m = p.matcher(header_url);
+                                                            //正規表現で取り出す
+                                                            //ループ
+                                                            while (m.find()) {
+                                                                url_list.add(m.group());
                                                             }
 
+                                                            //max_idを配列から探す
+                                                            //ないときは-1を返すのでちぇっく
+                                                            if (url_list.get(0).contains("max_id")) {
+                                                                url = url_list.get(0);
+                                                                System.out.println("max_id りんく : " + url);
+                                                                //実行
+                                                                if (url != null) {
+                                                                    loadTimelineAPI.loadTimeline(activity, timelineAdapter, listView, url, null, frameLayout);
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -305,6 +320,9 @@ public class loadTimelineAPI {
             public void onResponse(Call call, Response response) throws IOException {
                 String response_string = response.body().string();
                 try {
+                    //追加読み込み用リンクをヘッダーから持ってくる
+                    final String header_url = response.headers().get("link");
+
                     final JSONArray jsonArray = new JSONArray(response_string);
                     for (int i = 0; i < jsonArray.length(); i++) {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -356,7 +374,48 @@ public class loadTimelineAPI {
                                             frameLayout.removeAllViews();
 
                                             //追加読み込みとか
-                                            //System.out.println("数 " + adapter.getCount());
+                                            returnListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+                                                @Override
+                                                public void onScrollStateChanged(AbsListView view, int scrollState) {
+                                                    position = returnListView.getFirstVisiblePosition();
+                                                    y = returnListView.getChildAt(0).getTop();
+                                                }
+
+                                                @Override
+                                                public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                                                    //これ最後だと無限に呼び出されるので最後一度だけ呼ばれるようにする
+                                                    if (firstVisibleItem + visibleItemCount == totalItemCount && !last) {
+                                                        //２回呼ばないようにする
+                                                        last = true;
+                                                        if (timelineAdapter.getCount() >= 30) {
+                                                            //１個以上で動くように
+                                                            //URLを正規表現で取る？
+                                                            String url = null;
+                                                            ArrayList<String> url_list = new ArrayList<>();
+                                                            //正規表現実行
+                                                            //判定するパターンを生成
+                                                            Pattern p = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+");
+                                                            Matcher m = p.matcher(header_url);
+                                                            //正規表現で取り出す
+                                                            //ループ
+                                                            while (m.find()) {
+                                                                url_list.add(m.group());
+                                                            }
+
+                                                            //max_idを配列から探す
+                                                            //ないときは-1を返すのでちぇっく
+                                                            if (url_list.get(0).contains("max_id")) {
+                                                                url = url_list.get(0);
+                                                                System.out.println("max_id りんく : " + url);
+                                                                //実行
+                                                                if (url != null) {
+                                                                    loadTimelineAPI.loadFollow(activity, timelineAdapter, listView, url, frameLayout);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            });
                                         }
                                     });
                                     //frameLayout.removeAllViews();
