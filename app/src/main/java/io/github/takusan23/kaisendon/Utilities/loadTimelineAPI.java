@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendon.Utilities;
 
 import android.app.Activity;
+import android.preference.PreferenceManager;
 import android.text.Html;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
@@ -217,9 +218,9 @@ public class loadTimelineAPI {
                                             timelineAdapter.notifyDataSetChanged();
                                             returnListView.setAdapter(timelineAdapter);
                                             last = false;
-                                            if (maxID != null) {
-                                                returnListView.setSelectionFromTop(position, y);
-                                            }
+                                            //追加読み込み時にトップにワープしないようにする
+                                            returnListView.setSelectionFromTop(position, y);
+
 
                                             //くるくる終了
                                             frameLayout.removeAllViews();
@@ -238,9 +239,8 @@ public class loadTimelineAPI {
                                                 public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                                                     //これ最後だと無限に呼び出されるので最後一度だけ呼ばれるようにする
                                                     if (firstVisibleItem + visibleItemCount == totalItemCount && !last) {
-                                                        //２回呼ばないようにする
                                                         last = true;
-                                                        if (timelineAdapter.getCount() >= 30) {
+                                                        if (timelineAdapter.getCount() >= 20) {
                                                             //１個以上で動くように
                                                             //URLを正規表現で取る？
                                                             String url = null;
@@ -258,7 +258,7 @@ public class loadTimelineAPI {
                                                             //max_idを配列から探す
                                                             //ないときは-1を返すのでちぇっく
                                                             if (url_list.get(0).contains("max_id")) {
-                                                                url = url_list.get(0);
+                                                                url = url_list.get(0) + "&access_token=" + PreferenceManager.getDefaultSharedPreferences(activity).getString("main_token", "");
                                                                 System.out.println("max_id りんく : " + url);
                                                                 //実行
                                                                 if (url != null) {
@@ -372,6 +372,8 @@ public class loadTimelineAPI {
                                             last = false;
                                             //くるくる終了
                                             frameLayout.removeAllViews();
+                                            //追加読み込み時にトップにワープしないようにする
+                                            returnListView.setSelectionFromTop(position, y);
 
                                             //追加読み込みとか
                                             returnListView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -387,7 +389,7 @@ public class loadTimelineAPI {
                                                     if (firstVisibleItem + visibleItemCount == totalItemCount && !last) {
                                                         //２回呼ばないようにする
                                                         last = true;
-                                                        if (timelineAdapter.getCount() >= 30) {
+                                                        if (timelineAdapter.getCount() >= 20) {
                                                             //１個以上で動くように
                                                             //URLを正規表現で取る？
                                                             String url = null;
@@ -405,7 +407,8 @@ public class loadTimelineAPI {
                                                             //max_idを配列から探す
                                                             //ないときは-1を返すのでちぇっく
                                                             if (url_list.get(0).contains("max_id")) {
-                                                                url = url_list.get(0);
+                                                                url = url_list.get(0) + "&access_token=" + PreferenceManager.getDefaultSharedPreferences(activity).getString("main_token", "");
+                                                                ;
                                                                 System.out.println("max_id りんく : " + url);
                                                                 //実行
                                                                 if (url != null) {

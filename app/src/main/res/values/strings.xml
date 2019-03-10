@@ -46,4 +46,5 @@
     <string name="add">Add</string>
     <string name="toot_shortcut_delete_message">To delete it please choose from the following.</string>
     <string name="toot_shortcut_android_send">Transfer TootShortcut to Android device</string>
+    <string name="transfer_complete">Transfer complete</string>
 </resources>

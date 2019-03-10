@@ -14,8 +14,7 @@
         android:id="@+id/top_navigation_drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#80757575"
-        app:navigationStyle="multiPage" >
+        android:background="#80757575">
 
     </android.support.wear.widget.drawer.WearableNavigationDrawerView>
 

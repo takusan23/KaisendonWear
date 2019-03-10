@@ -137,7 +137,6 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
     @Override
     public void onMessageReceived(@NonNull MessageEvent messageEvent) {
 
-
         //最初の通信時は消す？
         if (messageEvent.getPath().contains("/clear")) {
             stringArrayList.clear();
@@ -158,6 +157,7 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
         if (messageEvent.getPath().contains("/finish")) {
             //Menuに入れる
             if (stringArrayList.size() == iconArrayList.size()) {
+                Toast.makeText(TootShortcutSettingActivity.this, getString(R.string.transfer_complete), Toast.LENGTH_SHORT).show();
                 Menu menu = mWearableActionDrawer.getMenu();
                 for (int i = 0; i < stringArrayList.size(); i++) {
                     //こいつら重要！！！！
