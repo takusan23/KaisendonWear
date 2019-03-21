@@ -175,7 +175,7 @@ public class TootInfoActivity extends WearableActivity {
                         final String created_at = jsonObject.getString("created_at");
                         final String userID = jsonObject.getJSONObject("account").getString("id");
                         //時間表示変換
-                        final String time = timeFormatChange(created_at, "9");
+                        final String time = timeFormatChange(created_at, pref_setting.getString("time","0"));
                         //画像
                         String imageURL_1 = null;
                         String imageURL_2 = null;

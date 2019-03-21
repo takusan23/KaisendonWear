@@ -27,9 +27,12 @@
             android:value="true" />
 
         <activity
+            android:name=".SettingActivity"
+            android:label="@string/title_activity_setting"></activity>
+        <activity
             android:name=".TootShortcutSettingActivity"
             android:label="@string/title_activity_toot_shortcut_setting"
-            android:theme="@style/Theme.AppCompat"></activity>
+            android:theme="@style/Theme.AppCompat" />
         <activity
             android:name=".UserListActivity"
             android:label="@string/title_activity_user_list" />

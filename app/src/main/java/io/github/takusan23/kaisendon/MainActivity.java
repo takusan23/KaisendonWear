@@ -425,6 +425,8 @@ public class MainActivity extends WearableActivity implements MenuItem.OnMenuIte
                 //reloadTL
                 loadTL(null);
                 break;
+            case R.id.setting_menu:
+                startActivity(new Intent(MainActivity.this,SettingActivity.class));
         }
         mWearableActionDrawer.getController().peekDrawer();
         return false;

@@ -118,11 +118,16 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
             @Override
             public void onClick(View v) {
                 if (stringArrayList.size() != 0) {
-                    //forで回す
+                    //for
+                    //JSONArrayを投げる
+                    JSONArray text_array = new JSONArray();
+                    JSONArray icon_array = new JSONArray();
                     for (int i = 0; i < stringArrayList.size(); i++) {
-                        sendAndroidDeviceText("/toot_text", stringArrayList.get(i));
-                        sendAndroidDeviceText("/toot_icon", iconArrayList.get(i));
+                        text_array.put(stringArrayList.get(i));
+                        icon_array.put(iconArrayList.get(i));
                     }
+                    sendAndroidDeviceText("/toot_text", text_array.toString());
+                    sendAndroidDeviceText("/toot_icon", icon_array.toString());
                     sendAndroidDeviceText("/finish", "finish");
                 }
             }
@@ -147,11 +152,27 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
 
         //Text
         if (messageEvent.getPath().contains("/toot_text")) {
-            stringArrayList.add(new String(messageEvent.getData()));
+            //JSONParse
+            try {
+                JSONArray text_array = new JSONArray(new String(messageEvent.getData()));
+                for (int i = 0; i < text_array.length(); i++) {
+                    stringArrayList.add((String) text_array.get(i));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         //Icon
         if (messageEvent.getPath().contains("/toot_icon")) {
-            iconArrayList.add(new String(messageEvent.getData()));
+            //JSONParse
+            try {
+                JSONArray icon_array = new JSONArray(new String(messageEvent.getData()));
+                for (int i = 0; i < icon_array.length(); i++) {
+                    iconArrayList.add((String) icon_array.get(i));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         //終わり
         if (messageEvent.getPath().contains("/finish")) {
@@ -161,7 +182,7 @@ public class TootShortcutSettingActivity extends WearableActivity implements Men
                 Menu menu = mWearableActionDrawer.getMenu();
                 for (int i = 0; i < stringArrayList.size(); i++) {
                     //こいつら重要！！！！
-                    menu.clear();
+                    //menu.clear();
                     getMenuInflater().inflate(R.menu.toot_shortcut_setting, menu);
                     menu.add(0, i, 0, stringArrayList.get(i)).setIcon(R.drawable.ic_delete_black_24dp);
                 }

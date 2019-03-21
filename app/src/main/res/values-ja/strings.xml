@@ -44,4 +44,6 @@
     <string name="toot_shortcut_delete_message">削除する場合は以下から選んでください。</string>
     <string name="toot_shortcut_android_send">トゥートショートカットをAndroid端末に転送</string>
     <string name="transfer_complete">転送完了</string>
+    <string name="setting_time_location">時差の設定</string>
+    <string name="setting">設定</string>
 </resources>
