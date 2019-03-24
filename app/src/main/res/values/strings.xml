@@ -50,4 +50,6 @@
     <string name="title_activity_setting">SettingActivity</string>
     <string name="setting_time_location">Time difference setting</string>
     <string name="setting">Settings</string>
+    <string name="title_activity_license">LicenseActivity</string>
+    <string name="license">License</string>
 </resources>

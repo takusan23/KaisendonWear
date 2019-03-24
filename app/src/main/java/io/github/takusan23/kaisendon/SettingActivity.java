@@ -1,10 +1,14 @@
 package io.github.takusan23.kaisendon;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.wearable.activity.WearableActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class SettingActivity extends WearableActivity {
@@ -12,7 +16,7 @@ public class SettingActivity extends WearableActivity {
     private SharedPreferences pref_setting;
     private EditText time_EditText;
     private SharedPreferences.Editor editor;
-
+    private Button license_Button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,8 +24,15 @@ public class SettingActivity extends WearableActivity {
         setContentView(R.layout.activity_setting);
         pref_setting = PreferenceManager.getDefaultSharedPreferences(this);
         editor = pref_setting.edit();
-
         time_EditText = findViewById(R.id.setting_time);
+        license_Button = findViewById(R.id.license_button);
+
+        license_Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(SettingActivity.this, LicenseActivity.class));
+            }
+        });
 
         //読み込み
         loadSetting(time_EditText,"time");

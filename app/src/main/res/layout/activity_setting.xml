@@ -13,20 +13,29 @@
         android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
         app:boxedEdges="all">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/setting_time_location"/>
+            android:text="@string/setting_time_location" />
 
         <EditText
             android:id="@+id/setting_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:inputType="number"/>
+            android:inputType="number" />
+
+        <Button
+            android:id="@+id/license_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_style"
+            android:drawableStart="@drawable/ic_import_contacts_black_24dp"
+            android:text="@string/license" />
 
     </LinearLayout>
 </android.support.wear.widget.BoxInsetLayout>

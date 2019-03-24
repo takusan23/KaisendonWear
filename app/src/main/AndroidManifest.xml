@@ -27,8 +27,11 @@
             android:value="true" />
 
         <activity
+            android:name=".LicenseActivity"
+            android:label="@string/title_activity_license"></activity>
+        <activity
             android:name=".SettingActivity"
-            android:label="@string/title_activity_setting"></activity>
+            android:label="@string/title_activity_setting" />
         <activity
             android:name=".TootShortcutSettingActivity"
             android:label="@string/title_activity_toot_shortcut_setting"
